@@ -19,7 +19,7 @@ public class Reporte {
 
     @Id
     private String id; //  MongoDB lo maneja como ObjectId internamente
-
+// atributos de la clase reporte
     private String nombre;
     private String descripcion;
     private Categoria categoria;
