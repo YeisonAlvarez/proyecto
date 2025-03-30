@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Document(collection = "comentarios")  // Definir la colección si deseas almacenar comentarios como documentos individuales
 public class Comentario {
 
+
     @Id
     private String id; //  MongoDB lo maneja como ObjectId internamente
     private String idUsuario;   // ID del usuario que realiza el comentario
