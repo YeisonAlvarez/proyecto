@@ -1,6 +1,6 @@
 package co.edu.uniquindio.proyecto.modelo.documentos;
 
-import co.edu.uniquindio.proyecto.modelo.enums.Categoria;
+import co.edu.uniquindio.proyecto.modelo.enums.CategoriaEnum;
 import co.edu.uniquindio.proyecto.modelo.enums.EstadoReporte;
 import lombok.*;
 import org.springframework.data.annotation.Id;
@@ -22,7 +22,7 @@ public class Reporte {
 
     private String nombre;
     private String descripcion;
-    private Categoria categoria;
+    private CategoriaEnum categoria;
     private String usuarioId; //  Mantener como String
     private LocalDateTime fechaCreacion;
     private boolean importante; // Propiedad para marcar como importante
@@ -32,7 +32,7 @@ public class Reporte {
 
 
     @Builder
-    public Reporte(String nombre, String descripcion, Categoria categoria, String usuarioId, LocalDateTime fechaCreacion) {
+    public Reporte(String nombre, String descripcion, CategoriaEnum categoria, String usuarioId, LocalDateTime fechaCreacion) {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.categoria = categoria;

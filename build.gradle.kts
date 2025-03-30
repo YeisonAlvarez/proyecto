@@ -40,6 +40,12 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-websocket")
 
+    implementation ("io.jsonwebtoken:jjwt-api:0.11.5")
+    implementation ("io.jsonwebtoken:jjwt-impl:0.11.5")
+    implementation ("io.jsonwebtoken:jjwt-jackson:0.11.5") // Usa Jackson para manejar JSON en JWT
+
+    implementation ("org.springframework.boot:spring-boot-starter-mail")// Para enviar emails
+    implementation ("jakarta.mail:jakarta.mail-api:2.1.2") // API de correo (opcional, pero recomendado)
 
 }
 

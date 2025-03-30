@@ -1,7 +1,7 @@
 package co.edu.uniquindio.proyecto.repositorios;
 
 import co.edu.uniquindio.proyecto.modelo.documentos.Reporte;
-import co.edu.uniquindio.proyecto.modelo.enums.Categoria;
+import co.edu.uniquindio.proyecto.modelo.enums.CategoriaEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -15,7 +15,7 @@ public interface ReporteRepo extends MongoRepository<Reporte, String> {
     Page<Reporte> findAll(Pageable pageable);
 
     // Buscar reportes por categoría con paginación
-    Page<Reporte> findByCategoria(Categoria categoria, Pageable pageable);
+    Page<Reporte> findByCategoria(CategoriaEnum categoriaEnum, Pageable pageable);
 
     // Buscar reportes de un usuario por su ID, ordenados por fecha
     List<Reporte> findByUsuarioIdOrderByFechaCreacionAsc(String usuarioId);
