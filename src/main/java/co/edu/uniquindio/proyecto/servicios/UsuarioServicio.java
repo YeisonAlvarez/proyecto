@@ -16,4 +16,6 @@ public interface UsuarioServicio {
     boolean activarCuenta(String email, String codigo);
     boolean recuperarContraseña(RecuperarPasswordDTO recuperarPasswordDTO);
 
+    TokenDTO generarToken(CrearUsuarioDTO usuarioDTO) throws Exception;
+
 }

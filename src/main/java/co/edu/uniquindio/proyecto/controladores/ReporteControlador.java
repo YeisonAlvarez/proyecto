@@ -4,7 +4,7 @@ import co.edu.uniquindio.proyecto.dto.CrearReporteDTO;
 import co.edu.uniquindio.proyecto.dto.EditarReporteDTO;
 import co.edu.uniquindio.proyecto.dto.MensajeDTO;
 import co.edu.uniquindio.proyecto.modelo.documentos.Reporte;
-import co.edu.uniquindio.proyecto.modelo.enums.Categoria;
+import co.edu.uniquindio.proyecto.modelo.enums.CategoriaEnum;
 import co.edu.uniquindio.proyecto.servicios.ReporteServicio;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ public class ReporteControlador {
         Reporte reporte = Reporte.builder()
                 .nombre(crearReporteDTO.titulo())
                 .descripcion(crearReporteDTO.descripcion())
-                .categoria(Categoria.valueOf(crearReporteDTO.categoria().toUpperCase())) // Conversión segura a Enum
+                .categoria(CategoriaEnum.valueOf(crearReporteDTO.categoria().toUpperCase())) // Conversión segura a Enum
                 .usuarioId(crearReporteDTO.idUsuario()) // Mantener como String
                 .fechaCreacion(LocalDateTime.now())
                 .build();
@@ -52,25 +52,30 @@ public class ReporteControlador {
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<Reporte> obtenerReporte(@PathVariable String id) {
-        Reporte reporte = reporteServicio.obtenerReportePorId(id)
-                .orElseThrow(() -> new RuntimeException("Reporte no encontrado"));
-        return ResponseEntity.ok(reporte);
+    public ResponseEntity<MensajeDTO<String>> obtenerReporte(@PathVariable String id) {
+
+        Reporte reporte = reporteServicio.obtenerReportePorId(id);
+        if (reporte == null) {
+            return ResponseEntity.ok(new MensajeDTO<>(true, "Reporte no encontrado"));
+        }
+        return ResponseEntity.ok(new MensajeDTO<>(false,"Reporte encontrado"));
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<MensajeDTO<String>> editarReporte(@PathVariable String id, @Valid @RequestBody EditarReporteDTO editarReporteDTO) {
-        Reporte reporte = reporteServicio.obtenerReportePorId(id)
-                .orElseThrow(() -> new RuntimeException("Reporte no encontrado"));
+        Reporte reporte = reporteServicio.obtenerReportePorId(id);
+        if (reporte == null) {
+            return ResponseEntity.ok(new MensajeDTO<>(true, "Reporte no encontrado"));
+        }
 
-        // Usando los métodos getters y setters correctamente
         reporte.setNombre(editarReporteDTO.getNombre());
         reporte.setDescripcion(editarReporteDTO.getDescripcion());
-        reporte.setCategoria(Categoria.valueOf(editarReporteDTO.getCategoria().toUpperCase()));
+        reporte.setCategoria(CategoriaEnum.valueOf(editarReporteDTO.getCategoria().toUpperCase()));
 
         reporteServicio.crearReporte(reporte); // Guardar los cambios
 
-        return ResponseEntity.ok(new MensajeDTO<String>(false, "Reporte actualizado exitosamente"));
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Reporte actualizado exitosamente"));
     }
 
     @DeleteMapping("/{id}")

@@ -1,7 +1,7 @@
 package co.edu.uniquindio.proyecto.modelo;
 
 
-import co.edu.uniquindio.proyecto.modelo.enums.Categoria;
+import co.edu.uniquindio.proyecto.modelo.enums.CategoriaEnum;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -22,7 +22,7 @@ public class Producto {
     @EqualsAndHashCode.Include
     private ObjectId id;
     private String nombre;
-    private List<Categoria> tipoProducto;
+    private List<CategoriaEnum> tipoProducto;
     private int unidades;
     private float precio;
 }

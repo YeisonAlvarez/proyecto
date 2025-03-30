@@ -20,7 +20,7 @@ public class UsuarioControlador {
     @PostMapping
     public ResponseEntity<MensajeDTO<String>> crear(@Valid @RequestBody CrearUsuarioDTO cuenta) throws Exception{
         usuarioServicio.crear(cuenta);
-        return ResponseEntity.status(201).body(new MensajeDTO<>(false, "Su registro ha sido exitoso"));
+        return ResponseEntity.status(201).body(new MensajeDTO<>(false, "Pre-registro exitoso. Revisa el token enviado a tu correo para activar tu cuenta."));
     }
 
     @SecurityRequirement(name = "bearerAuth")

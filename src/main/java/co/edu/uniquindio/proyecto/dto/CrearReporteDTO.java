@@ -12,7 +12,7 @@ public record CrearReporteDTO(
         @NotBlank @Length(max = 400) String descripcion,
         @NotEmpty List<String> rutaImagenes,
         @NotBlank String categoria,
-        @NotNull Ubicacion ubicacion,
+        @NotNull UbicacionDTO ubicacionDTO,
         @NotBlank String idUsuario
 ) {
 }

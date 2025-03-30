@@ -1,10 +1,9 @@
 package co.edu.uniquindio.proyecto.servicios.impl;
 
-import co.edu.uniquindio.proyecto.dto.ComentarioDTO;
-import co.edu.uniquindio.proyecto.dto.EstadoReporteDTO;
-import co.edu.uniquindio.proyecto.dto.UsuarioDTO;
+import co.edu.uniquindio.proyecto.dto.*;
 import co.edu.uniquindio.proyecto.modelo.documentos.Comentario;
 import co.edu.uniquindio.proyecto.modelo.documentos.Reporte;
+import co.edu.uniquindio.proyecto.modelo.documentos.Ubicacion;
 import co.edu.uniquindio.proyecto.modelo.enums.EstadoReporte;
 import co.edu.uniquindio.proyecto.repositorios.ReporteRepo;
 import co.edu.uniquindio.proyecto.servicios.ReporteServicio;
@@ -14,7 +13,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,8 +26,8 @@ public class ReporteServicioImpl implements ReporteServicio {
     }
 
     @Override
-    public List<Reporte> listarReportes() {
-        return reporteRepo.findAll();
+    public void actualizarReporte(String id, EditarReporteDTO editarReporteDTO) {
+
     }
 
     @Override
@@ -37,9 +35,20 @@ public class ReporteServicioImpl implements ReporteServicio {
         return reporteRepo.findAll(pageable);
     }
 
+
     @Override
-    public Optional<Reporte> obtenerReportePorId(String id) {
-        return reporteRepo.findById(id);
+    public List<InfoReporteDTO> obtenerReporte(String categoria, EstadoReporteDTO estadoReporteDTO) {
+        return List.of();
+    }
+
+    @Override
+    public List<InfoReporteDTO> obtenerReportesUsuario(String idUsuario) {
+        return List.of();
+    }
+
+    @Override
+    public List<InfoReporteDTO> obtenerReportesUbicacion(Ubicacion ubicacion) {
+        return List.of();
     }
 
     @Override
@@ -48,13 +57,18 @@ public class ReporteServicioImpl implements ReporteServicio {
     }
 
     @Override
+    public Reporte obtenerReportePorId(String id) {
+        return null;
+    }
+
+
     public boolean agregarComentario(String idReporte, ComentarioDTO comentarioDTO) {
         // Cambié "reporteRepositorio" por "reporteRepo"
         Reporte reporte = reporteRepo.findById(idReporte)
                 .orElseThrow(() -> new RuntimeException("Reporte no encontrado"));
 
         // Crear el comentario y añadirlo al reporte
-        Comentario comentario = new Comentario(comentarioDTO.getIdUsuario(), comentarioDTO.getComentario());
+        Comentario comentario = new Comentario(comentarioDTO.getIdUsuario(), comentarioDTO.getIdReporte(),comentarioDTO.getComentario(),comentarioDTO.getFecha());
         reporte.getComentarios().add(comentario);
 
         // Guardamos el reporte actualizado
