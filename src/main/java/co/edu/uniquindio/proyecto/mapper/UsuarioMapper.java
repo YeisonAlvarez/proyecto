@@ -19,13 +19,6 @@ public interface UsuarioMapper {
 
     UsuarioDTO toDTO(Usuario usuario);
 
-    //@Mapping(target = "id", ignore = true)
-   // @Mapping(target = "estado", ignore = true)
-   // @Mapping(target = "rol", ignore = true)
-   // @Mapping(target = "fechaRegistro", ignore = true)
-   // @Mapping(target = "codigoValidacion", ignore = true)
-   // @Mapping(target = "email", ignore = true)
-    //@Mapping(target = "password", ignore = true)
     void toDocument(EditarUsuarioDTO editarUsuarioDTO, @MappingTarget Usuario usuario);
 
     // Metodo para mapear de ObjectId a String

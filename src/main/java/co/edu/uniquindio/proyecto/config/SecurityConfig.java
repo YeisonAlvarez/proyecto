@@ -60,6 +60,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/reportes/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reportes").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reportes/cercanos").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/reportes/buscar").permitAll()
 
 
                         .requestMatchers(HttpMethod.GET, "/api/categorias/{id}").permitAll()
@@ -76,6 +77,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/reportes/{id}").hasAuthority("ROLE_CLIENTE")
                         .requestMatchers(HttpMethod.DELETE, "/api/reportes/{id}").hasAuthority("ROLE_CLIENTE")
                         .requestMatchers(HttpMethod.POST, "/api/reportes/{id}/importante").hasAuthority("ROLE_CLIENTE")
+                        .requestMatchers(HttpMethod.POST, "/api/reportes/{id}/calificacion").hasAuthority("ROLE_CLIENTE")
 
                         // Rutas solo para ADMINISTRADORES
                         .requestMatchers(HttpMethod.POST, "/api/categorias").hasAuthority("ROLE_ADMINISTRADOR")
@@ -85,6 +87,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/reportes/{id}/estado").hasAuthority("ROLE_ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/reportes/informe").hasAuthority("ROLE_ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/reportes/filtrar").hasAuthority("ROLE_ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios").hasAuthority("ROLE_ADMINISTRADOR")
 
                         // Todo lo demás requiere autenticación
                         .anyRequest().authenticated()

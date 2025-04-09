@@ -2,6 +2,7 @@ package co.edu.uniquindio.proyecto.servicios.impl;
 
 import co.edu.uniquindio.proyecto.dto.*;
 import co.edu.uniquindio.proyecto.modelo.documentos.Usuario;
+import co.edu.uniquindio.proyecto.modelo.enums.EstadoUsuario;
 import co.edu.uniquindio.proyecto.repositorios.UsuarioRepo;
 import co.edu.uniquindio.proyecto.seguridad.JWTUtils;
 import co.edu.uniquindio.proyecto.servicios.AutenticacionServicio;
@@ -40,6 +41,10 @@ public class AutenticacionServicioImpl  implements AutenticacionServicio {
 
         Usuario usuario = optionalUsuario.get();
 
+        // Validar si el usuario está activo
+        if (usuario.getEstado() != EstadoUsuario.ACTIVO) {
+            throw new Exception("El usuario no está activo. Verifique su cuenta.");
+        }
 
         // Verificar si la contraseña es correcta usando el PasswordEncoder
         if(!passwordEncoder.matches(loginDTO.password(), usuario.getPassword())){

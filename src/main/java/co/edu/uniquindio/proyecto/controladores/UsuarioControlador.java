@@ -68,16 +68,17 @@ public class UsuarioControlador {
         return ResponseEntity.ok(new MensajeDTO<>(false, "Operación exitosa", info));
     }
 
-
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping
     public ResponseEntity<MensajeDTO<List<UsuarioDTO>>> listarTodos(
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) String ciudad,
-            @RequestParam int pagina
+            @RequestParam(defaultValue = "0") int pagina // default para evitar errores
     ) {
-        List<UsuarioDTO> lista = usuarioServicio.listarTodos(nombre, ciudad, 1);
+        List<UsuarioDTO> lista = usuarioServicio.listarTodos(nombre, ciudad, pagina);
         return ResponseEntity.ok(new MensajeDTO<>(false, "Lista de usuarios", lista));
     }
+
 
 
     @SecurityRequirement(name = "bearerAuth")

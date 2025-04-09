@@ -33,4 +33,9 @@ public interface ReporteServicio {
 
     //Optional<HistorialEstadoDTO> listarHistorialEstados(String id);
 
+
+    List<ReporteDTO> buscarReportes(BuscarReporteDTO filtros) throws Exception;
+
+    void calificarReporte(String idReporte, int estrellas) throws Exception;
+
 }

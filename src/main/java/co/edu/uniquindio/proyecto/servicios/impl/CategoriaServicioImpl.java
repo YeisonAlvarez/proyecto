@@ -1,8 +1,9 @@
 package co.edu.uniquindio.proyecto.servicios.impl;
 
+import co.edu.uniquindio.proyecto.dto.ActualizarCategoriaDTO;
 import co.edu.uniquindio.proyecto.dto.CategoriaDTO;
+import co.edu.uniquindio.proyecto.dto.CrearCategoriaDTO;
 import co.edu.uniquindio.proyecto.excepciones.ElementoNoEncontradoException;
-import co.edu.uniquindio.proyecto.excepciones.ElementoRepetidoException;
 import co.edu.uniquindio.proyecto.mapper.CategoriaMapper;
 import co.edu.uniquindio.proyecto.modelo.documentos.Categoria;
 import co.edu.uniquindio.proyecto.repositorios.CategoriaRepo;
@@ -10,9 +11,7 @@ import co.edu.uniquindio.proyecto.servicios.CategoriaServicio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,36 +21,35 @@ public class CategoriaServicioImpl implements CategoriaServicio {
     private final CategoriaMapper categoriaMapper;
 
     @Override
-    public void crearCategoria(CategoriaDTO categoriaDTO) throws Exception {
-        if (categoriaRepo.existsByNombre(String.valueOf(categoriaDTO.nombre()))) {
-            throw new ElementoRepetidoException("La categoría ya existe");
+    public CategoriaDTO crearCategoria(CrearCategoriaDTO dto) throws Exception {
+        if (categoriaRepo.existsByNombre(dto.nombre().toUpperCase())) {
+            throw new Exception("Ya existe una categoría con ese nombre");
         }
 
-        Categoria categoria = categoriaMapper.toDocument(categoriaDTO);
-        categoriaRepo.save(categoria);
+        Categoria categoria = Categoria.builder()
+                .nombre(dto.nombre().toUpperCase())
+                .descripcion(dto.descripcion())
+                .build();
+
+        Categoria guardada = categoriaRepo.save(categoria);
+        return categoriaMapper.toDTO(guardada);
     }
 
+
     @Override
-    public void actualizarCategoria(String id, CategoriaDTO categoriaDTO) throws Exception {
-        // Verificar si la categoría con el ID existe
+    public void actualizarCategoria(String id, ActualizarCategoriaDTO dto) throws Exception {
         Categoria categoria = categoriaRepo.findById(id)
                 .orElseThrow(() -> new ElementoNoEncontradoException("Categoría no encontrada"));
 
-        // Validar que el nombre de la categoría esté en el Enum
-        try {
-            String.valueOf(categoriaDTO.nombre()); // Lanza IllegalArgumentException si el nombre no está en el Enum
-        } catch (IllegalArgumentException e) {
-            throw new Exception("El nombre de la categoría debe ser uno de los valores del Enum");
+        if (dto.nombre() == null || dto.nombre().isBlank()) {
+            throw new IllegalArgumentException("El nombre no puede estar vacío");
         }
 
-        // Actualizar la información de la categoría
-        categoria.setNombre(String.valueOf(categoriaDTO.nombre())); // Convertimos el nombre a Enum
-        categoria.setDescripcion(categoriaDTO.descripcion());
+        categoria.setNombre(dto.nombre().toUpperCase());
+        categoria.setDescripcion(dto.descripcion());
 
-        // Guardar la categoría actualizada en la base de datos
         categoriaRepo.save(categoria);
     }
-
 
     @Override
     public void eliminarCategoria(String id) throws Exception {
@@ -61,38 +59,27 @@ public class CategoriaServicioImpl implements CategoriaServicio {
         categoriaRepo.deleteById(id);
     }
 
-
-    //cualquier usuario
     @Override
     public CategoriaDTO obtenerCategoria(String id) throws Exception {
         if (id == null || id.isBlank()) {
             throw new IllegalArgumentException("El ID de la categoría no puede estar vacío");
         }
 
-        Optional<Categoria> optionalCategoria = categoriaRepo.findById(id);
-
-        if (!optionalCategoria.isPresent()) {
-            throw new ElementoNoEncontradoException("Categoría no encontrada");
-        }
-
-        return categoriaMapper.toDTO(optionalCategoria.get());
+        return categoriaRepo.findById(id)
+                .map(categoriaMapper::toDTO)
+                .orElseThrow(() -> new ElementoNoEncontradoException("Categoría no encontrada con id: " + id));
     }
 
-
-    //cualquier usuario
     @Override
     public List<CategoriaDTO> listarCategorias() throws Exception {
         List<Categoria> categorias = categoriaRepo.findAll();
 
-        if (categorias == null || categorias.isEmpty()) {
+        if (categorias.isEmpty()) {
             throw new ElementoNoEncontradoException("No hay categorías registradas.");
         }
 
-        List<CategoriaDTO> listaCategorias = new ArrayList<>();
-        for (Categoria categoria : categorias) {
-            listaCategorias.add(categoriaMapper.toDTO(categoria));
-        }
-
-        return listaCategorias;
+        return categorias.stream()
+                .map(categoriaMapper::toDTO)
+                .toList();
     }
 }
