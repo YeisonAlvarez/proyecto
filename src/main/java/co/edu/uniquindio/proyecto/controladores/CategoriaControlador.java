@@ -20,31 +20,34 @@ public class CategoriaControlador {
     @PostMapping
     public ResponseEntity<MensajeDTO<String>> crear(@Valid @RequestBody CategoriaDTO categoria) throws Exception {
         categoriaServicio.crearCategoria(categoria);
-        return ResponseEntity.status(201).body(new MensajeDTO<>(false, "Categoría creada exitosamente"));
+        return ResponseEntity.status(201).body(new MensajeDTO<>(false, "Categoría creada exitosamente", null));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MensajeDTO<String>> actualizar(@PathVariable String id, @RequestBody CategoriaDTO categoria) throws Exception {
-        categoriaServicio.actualizarCategoria(categoria);
-        return ResponseEntity.ok(new MensajeDTO<>(false, "Categoría actualizada exitosamente"));
+    public ResponseEntity<MensajeDTO<String>> actualizar(@PathVariable String id, @Valid @RequestBody CategoriaDTO categoria) throws Exception {
+        categoriaServicio.actualizarCategoria(id, categoria);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Categoría actualizada exitosamente", null));
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<MensajeDTO<String>> eliminar(@PathVariable String id) throws Exception {
         categoriaServicio.eliminarCategoria(id);
-        return ResponseEntity.ok(new MensajeDTO<>(false, "Categoría eliminada exitosamente"));
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Categoría eliminada exitosamente", null));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<MensajeDTO<CategoriaDTO>> obtener(@PathVariable String id) throws Exception {
         CategoriaDTO info = categoriaServicio.obtenerCategoria(id);
-        return ResponseEntity.ok(new MensajeDTO<>(false, info));
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Operación exitosa", info));
+
     }
 
     @GetMapping
     public ResponseEntity<MensajeDTO<List<CategoriaDTO>>> listar() throws Exception {
         List<CategoriaDTO> lista = categoriaServicio.listarCategorias();
-        return ResponseEntity.ok(new MensajeDTO<>(false, lista));
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Lista de categorías obtenida con éxito", lista));
+
     }
 }
 

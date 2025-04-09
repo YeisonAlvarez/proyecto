@@ -1,6 +1,5 @@
 package co.edu.uniquindio.proyecto.modelo.documentos;
 
-import co.edu.uniquindio.proyecto.modelo.enums.CategoriaEnum;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.Id;

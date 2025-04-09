@@ -2,31 +2,34 @@ package co.edu.uniquindio.proyecto.servicios;
 
 import co.edu.uniquindio.proyecto.dto.*;
 import co.edu.uniquindio.proyecto.modelo.documentos.Reporte;
-import co.edu.uniquindio.proyecto.modelo.documentos.Ubicacion;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReporteServicio {
 
 
-    Reporte crearReporte(Reporte reporte);
-    void actualizarReporte(String id, EditarReporteDTO editarReporteDTO);
+    Reporte crearReporte(CrearReporteDTO crearReporteDTO) throws Exception;
     void eliminarReporte(String id);
+
+    void editarReporte(String idReporte, EditarReporteDTO dto) throws Exception;
+
+
     Reporte obtenerReportePorId(String id);
     List<InfoReporteDTO> obtenerReporte(String categoria, EstadoReporteDTO estadoReporteDTO);
-    List<InfoReporteDTO>  obtenerReportesUsuario(String idUsuario);
-    List<InfoReporteDTO>  obtenerReportesUbicacion(Ubicacion ubicacion);
 
-    Page<Reporte> listarReportes(Pageable pageable); // Método paginado
-
-
-    boolean marcarImportante(String idReporte, UsuarioDTO usuarioDTO);
+    Page<Reporte> listarReportes(Pageable pageable);
+    boolean marcarImportante(String idReporte);
     boolean cambiarEstado(String idReporte, EstadoReporteDTO estadoReporteDTO);
 
+    List<ReporteDTO> listarReportesPorCategoriaYFechas(String categoria, LocalDateTime fechaInicio, LocalDateTime fechaFin);
 
+    byte[] generarInformePDF(String categoria, LocalDateTime fechaInicio, LocalDateTime fechaFin);
 
+    Page<Reporte> obtenerReportesCercanos(double longitud, double latitud, Pageable pageable);
 
     //Optional<HistorialEstadoDTO> listarHistorialEstados(String id);
 

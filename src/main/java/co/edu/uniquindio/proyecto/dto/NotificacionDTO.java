@@ -7,11 +7,12 @@ import lombok.Data;
 @AllArgsConstructor
 public class NotificacionDTO {
     private String mensaje;
-    private double latitud;
-    private double longitud;
-
-    //private String titulo;
-    //private String cuerpo;
-    //private String topic;
+    private String cuerpo;
+    private String topic;
 
 }
+
+
+
+// private double latitud;
+// private double longitud;

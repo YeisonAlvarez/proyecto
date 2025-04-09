@@ -1,10 +1,12 @@
 package co.edu.uniquindio.proyecto.dto;
 
+import co.edu.uniquindio.proyecto.modelo.enums.EstadoReporte;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record CrearReporteDTO(
@@ -13,6 +15,8 @@ public record CrearReporteDTO(
         @NotEmpty List<String> rutaImagenes,
         @NotBlank String categoria,
         @NotNull UbicacionDTO ubicacionDTO,
-        @NotBlank String idUsuario
+        @NotBlank String idUsuario,
+        @NotNull LocalDateTime fechaCreacion,
+        @NotNull EstadoReporte estado
 ) {
 }

@@ -1,3 +1,5 @@
+// EstadoReporteDTO.java
+
 package co.edu.uniquindio.proyecto.dto;
 
 public class EstadoReporteDTO {
@@ -28,4 +30,3 @@ public class EstadoReporteDTO {
         this.motivo = motivo;
     }
 }
-

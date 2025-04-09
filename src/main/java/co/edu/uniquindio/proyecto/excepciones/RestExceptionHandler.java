@@ -22,13 +22,13 @@ public class RestExceptionHandler {
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<MensajeDTO<String>> noResourceFoundExceptionHandler (NoResourceFoundException ex){
-        return ResponseEntity.status(404).body( new MensajeDTO<>(true, "El recurso no fue encontrado") );
+        return ResponseEntity.status(404).body( new MensajeDTO<>(true, "El recurso no fue encontrado",null) );
     }
 
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<MensajeDTO<String>> generalExceptionHandler (Exception e){
-        return ResponseEntity.internalServerError().body( new MensajeDTO<>(true, e.getMessage()) );
+        return ResponseEntity.internalServerError().body( new MensajeDTO<>(true,"" ,e.getMessage()) );
     }
 
 
@@ -43,7 +43,7 @@ public class RestExceptionHandler {
         }
 
 
-        return ResponseEntity.badRequest().body( new MensajeDTO<>(true, errores) );
+        return ResponseEntity.badRequest().body( new MensajeDTO<>(true, "Errores de validación", errores) );
     }
 
 

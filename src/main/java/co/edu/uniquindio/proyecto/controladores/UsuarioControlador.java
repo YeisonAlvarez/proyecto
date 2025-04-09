@@ -1,14 +1,27 @@
 package co.edu.uniquindio.proyecto.controladores;
 
 import co.edu.uniquindio.proyecto.dto.*;
+import co.edu.uniquindio.proyecto.excepciones.ElementoNoEncontradoException;
+import co.edu.uniquindio.proyecto.modelo.documentos.Usuario;
+import co.edu.uniquindio.proyecto.modelo.enums.Rol;
+import co.edu.uniquindio.proyecto.repositorios.UsuarioRepo;
+import co.edu.uniquindio.proyecto.seguridad.JWTUtils;
 import co.edu.uniquindio.proyecto.servicios.UsuarioServicio;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,42 +29,15 @@ import java.util.List;
 public class UsuarioControlador {
 
     private final UsuarioServicio usuarioServicio;
+    private final JWTUtils jwtUtils;
+    private final UsuarioRepo usuarioRepo;
 
-    @PostMapping
-    public ResponseEntity<MensajeDTO<String>> crear(@Valid @RequestBody CrearUsuarioDTO cuenta) throws Exception{
+    @PostMapping("/registro")
+    public ResponseEntity<MensajeDTO<String>> crear(@Valid @RequestBody CrearUsuarioDTO cuenta) throws Exception {
         usuarioServicio.crear(cuenta);
-        return ResponseEntity.status(201).body(new MensajeDTO<>(false, "Pre-registro exitoso. Revisa el token enviado a tu correo para activar tu cuenta."));
-    }
-
-    @SecurityRequirement(name = "bearerAuth")
-    @GetMapping("/{id}")
-    public ResponseEntity<MensajeDTO<UsuarioDTO>> obtener(@PathVariable String id) throws Exception{
-        UsuarioDTO info = usuarioServicio.obtener(id);
-        return ResponseEntity.ok(new MensajeDTO<>(false, info));
-    }
-
-    @SecurityRequirement(name = "bearerAuth")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<MensajeDTO<String>> eliminar(@PathVariable String id) throws Exception{
-        usuarioServicio.eliminar(id);
-        return ResponseEntity.ok(new MensajeDTO<>(false, "Cuenta eliminada exitosamente"));
-    }
-
-    @GetMapping
-    public ResponseEntity<MensajeDTO<List<UsuarioDTO>>> listarTodos(
-            @RequestParam(required = false) String nombre,
-            @RequestParam(required = false) String ciudad,
-            @RequestParam int pagina
-    ){
-        List<UsuarioDTO> lista = usuarioServicio.listarTodos(nombre, ciudad, 1);
-        return ResponseEntity.ok(new MensajeDTO<>(false, lista));
-    }
-
-    @SecurityRequirement(name = "bearerAuth")
-    @PutMapping
-    public ResponseEntity<MensajeDTO<String>> editarCuenta(@Valid @RequestBody EditarUsuarioDTO cuenta) throws Exception{
-        usuarioServicio.editar(cuenta);
-        return ResponseEntity.ok(new MensajeDTO<>(false, "Cuenta editada exitosamente"));
+        return ResponseEntity.status(201).body(
+                new MensajeDTO<>(false, "Pre-registro exitoso. Revisa el token enviado a tu correo para activar tu cuenta.", null)
+        );
     }
 
     @PutMapping("/activar/{email}/{codigo}")
@@ -59,21 +45,74 @@ public class UsuarioControlador {
         boolean activado = usuarioServicio.activarCuenta(email, codigo);
 
         if (activado) {
-            return ResponseEntity.ok(new MensajeDTO<>(false, "Cuenta activada correctamente"));
+            return ResponseEntity.ok(new MensajeDTO<>(false, "Cuenta activada correctamente", null));
         } else {
-            return ResponseEntity.status(400).body(new MensajeDTO<>(true, "Código de activación incorrecto"));
+            return ResponseEntity.status(400).body(new MensajeDTO<>(true, "Código de activación incorrecto", null));
         }
     }
 
-    @PostMapping("/auth/recover")
-    public ResponseEntity<MensajeDTO<String>> recuperarContraseña(@RequestBody RecuperarPasswordDTO recuperarPasswordDTO) {
-        boolean exito = usuarioServicio.recuperarContraseña(recuperarPasswordDTO);
+    @SecurityRequirement(name = "bearerAuth")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<MensajeDTO<String>> eliminar(@PathVariable String id) throws Exception {
 
-        if (exito) {
-            return ResponseEntity.ok(new MensajeDTO<>(false, "Correo de recuperación enviado"));
-        } else {
-            return ResponseEntity.status(400).body(new MensajeDTO<>(true, "No se pudo enviar el correo de recuperación"));
-        }
+        // Llamar al servicio para eliminar la cuenta
+        usuarioServicio.eliminar(id);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Cuenta eliminada exitosamente", null));
+
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/{id}")
+    public ResponseEntity<MensajeDTO<UsuarioDTO>> obtener(@PathVariable String id) throws Exception {
+        UsuarioDTO info = usuarioServicio.obtener(id);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Operación exitosa", info));
+    }
+
+
+    @GetMapping
+    public ResponseEntity<MensajeDTO<List<UsuarioDTO>>> listarTodos(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String ciudad,
+            @RequestParam int pagina
+    ) {
+        List<UsuarioDTO> lista = usuarioServicio.listarTodos(nombre, ciudad, 1);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Lista de usuarios", lista));
+    }
+
+
+    @SecurityRequirement(name = "bearerAuth")
+    @PutMapping("/{id}")
+    public ResponseEntity<MensajeDTO<String>> editarCuenta(@PathVariable String id,
+                                                           @Valid @RequestBody EditarUsuarioDTO cuenta) throws Exception {
+
+        // Llamar al servicio para editar la cuenta
+        usuarioServicio.editarCuenta(id, cuenta);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Cuenta editada exitosamente", null));
+    }
+
+
+    @SecurityRequirement(name = "bearerAuth")
+    @PutMapping("/actualizar-password")
+    public ResponseEntity<MensajeDTO<String>> cambiarPassword(@RequestBody CambiarPasswordDTO cambiarPasswordDTO) throws Exception {
+        usuarioServicio.cambiarPassword(cambiarPasswordDTO);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Contraseña cambiada exitosamente", null));
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/notificaciones/suscribirse")
+    public ResponseEntity<MensajeDTO<String>> suscribirseNotificaciones(
+            @RequestParam String idUsuario,
+            @Valid @RequestBody SuscripcionNotificacionesDTO suscripcion) throws Exception {
+
+        usuarioServicio.actualizarSuscripcionNotificaciones(idUsuario, suscripcion);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Preferencias de notificación actualizadas correctamente", null));
+    }
+
+
+    @PostMapping("/reenviar-token")
+    public ResponseEntity<MensajeDTO<String>> reenviarToken(@RequestParam String email) throws Exception {
+            usuarioServicio.reenviarToken(email);
+            return ResponseEntity.ok(new MensajeDTO<>(false, "Se ha enviado un nuevo token a tu correo", null));
     }
 
 

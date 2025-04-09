@@ -1,47 +1,49 @@
 package co.edu.uniquindio.proyecto.modelo.documentos;
 
-import co.edu.uniquindio.proyecto.modelo.enums.CategoriaEnum;
 import co.edu.uniquindio.proyecto.modelo.enums.EstadoReporte;
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
+import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+
+
+
 @Data
+@Builder
 @Document("reportes")
 public class Reporte {
 
     @Id
-    private String id; //  MongoDB lo maneja como ObjectId internamente
+    private String id; // MongoDB maneja este campo como ObjectId internamente
 
     private String nombre;
     private String descripcion;
-    private CategoriaEnum categoria;
-    private String usuarioId; //  Mantener como String
+    private String categoria;  //Revisar si queda asi o con categoriaId
+    private String usuarioId;
     private LocalDateTime fechaCreacion;
-    private boolean importante; // Propiedad para marcar como importante
-    private EstadoReporte estado; // Propiedad para el estado del reporte
-    private String motivoCambioEstado; // Motivo del cambio de estado
-    private List<Comentario> comentarios = new ArrayList<>();  // Inicializamos la lista aquí
+    private LocalDateTime fechaRechazo;
+    private int conteoImportante;
+    private Set<String> usuariosQueMarcaronImportante = new HashSet<>();
+    private EstadoReporte estado;
+    private String motivoCambioEstado;
+
+    @GeoSpatialIndexed(type = GeoSpatialIndexType.GEO_2DSPHERE)
+    private GeoJsonPoint ubicacion;
+
+    private List<Comentario> comentarios = new ArrayList<>();
 
 
-    @Builder
-    public Reporte(String nombre, String descripcion, CategoriaEnum categoria, String usuarioId, LocalDateTime fechaCreacion) {
-        this.nombre = nombre;
-        this.descripcion = descripcion;
-        this.categoria = categoria;
-        this.usuarioId = usuarioId;
-        this.fechaCreacion = fechaCreacion;
-        this.importante = importante;
-        this.estado = estado;
-        this.motivoCambioEstado = motivoCambioEstado;
-        this.comentarios = comentarios;
-
-    }
 }
