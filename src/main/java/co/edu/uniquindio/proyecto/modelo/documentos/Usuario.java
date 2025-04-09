@@ -31,9 +31,10 @@ public class Usuario {
     private Rol rol;
     private EstadoUsuario estado;
     private LocalDateTime fechaRegistro;
-    private String codigoActivacion;
+    private String TokenActivacion;
     private boolean notificacionApp;  // Propiedad para notificación en la app
     private boolean notificacionEmail; // Propiedad para notificación por email
+
 
     @Builder
     public Usuario(String nombre, Ciudad ciudad, String direccion, String email, String telefono, String password, Rol rol, EstadoUsuario estado, LocalDateTime fechaRegistro) {
@@ -46,7 +47,7 @@ public class Usuario {
         this.rol = rol;
         this.estado = estado;
         this.fechaRegistro = fechaRegistro;
-        this.codigoActivacion = codigoActivacion;
+        this.TokenActivacion = TokenActivacion;
         this.notificacionApp = notificacionApp;
         this.notificacionEmail = notificacionEmail;
 

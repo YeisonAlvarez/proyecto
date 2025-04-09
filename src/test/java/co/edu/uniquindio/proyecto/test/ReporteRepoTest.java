@@ -1,7 +1,6 @@
 package co.edu.uniquindio.proyecto.test;
 
 import co.edu.uniquindio.proyecto.modelo.documentos.Reporte;
-import co.edu.uniquindio.proyecto.modelo.enums.CategoriaEnum;
 import co.edu.uniquindio.proyecto.repositorios.ReporteRepo;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,7 @@ public class ReporteRepoTest {
 
     @Test
     void testBuscarPorCategoria() {
-        Page<Reporte> reportes = reporteRepo.findByCategoria(CategoriaEnum.SEGURIDAD, PageRequest.of(0, 5));
+        Page<Reporte> reportes = reporteRepo.findByCategoria("MASCOTAS", PageRequest.of(0, 5));
         assertNotNull(reportes);
         assertFalse(reportes.isEmpty());
     }

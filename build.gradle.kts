@@ -39,13 +39,25 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     implementation("org.springframework.boot:spring-boot-starter-websocket")
+    implementation ("org.springframework.boot:spring-boot-starter-thymeleaf")
 
-    implementation ("io.jsonwebtoken:jjwt-api:0.11.5")
-    implementation ("io.jsonwebtoken:jjwt-impl:0.11.5")
-    implementation ("io.jsonwebtoken:jjwt-jackson:0.11.5") // Usa Jackson para manejar JSON en JWT
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 
-    implementation ("org.springframework.boot:spring-boot-starter-mail")// Para enviar emails
-    implementation ("jakarta.mail:jakarta.mail-api:2.1.2") // API de correo (opcional, pero recomendado)
+
+    implementation ("org.springframework.boot:spring-boot-starter-mail")
+    implementation ("jakarta.mail:jakarta.mail-api:2.1.2")
+
+    implementation("org.simplejavamail:simple-java-mail:8.12.5")
+    implementation("org.simplejavamail:batch-module:8.12.5")
+
+    implementation("com.cloudinary:cloudinary-http45:1.39.0")
+    implementation ("com.itextpdf:itext7-core:7.2.2")
+
+
+
 
 }
 

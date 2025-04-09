@@ -10,7 +10,7 @@ Content-Type: application/json
     "longitud": -75.640557
   },
   "rutaImagenes": ["imagen1.jpg", "imagen2.jpg"],
-  "categoriaEnum": "MASCOTA",
+  "categoria": "MASCOTA",
   "idUsuario": "23232323"
 }
 

@@ -32,13 +32,26 @@ public class CategoriaServicioImpl implements CategoriaServicio {
     }
 
     @Override
-    public void actualizarCategoria(CategoriaDTO categoriaDTO) throws Exception {
-        Categoria categoria = categoriaRepo.findByNombre(String.valueOf(categoriaDTO.nombre()))
+    public void actualizarCategoria(String id, CategoriaDTO categoriaDTO) throws Exception {
+        // Verificar si la categoría con el ID existe
+        Categoria categoria = categoriaRepo.findById(id)
                 .orElseThrow(() -> new ElementoNoEncontradoException("Categoría no encontrada"));
 
+        // Validar que el nombre de la categoría esté en el Enum
+        try {
+            String.valueOf(categoriaDTO.nombre()); // Lanza IllegalArgumentException si el nombre no está en el Enum
+        } catch (IllegalArgumentException e) {
+            throw new Exception("El nombre de la categoría debe ser uno de los valores del Enum");
+        }
+
+        // Actualizar la información de la categoría
+        categoria.setNombre(String.valueOf(categoriaDTO.nombre())); // Convertimos el nombre a Enum
         categoria.setDescripcion(categoriaDTO.descripcion());
+
+        // Guardar la categoría actualizada en la base de datos
         categoriaRepo.save(categoria);
     }
+
 
     @Override
     public void eliminarCategoria(String id) throws Exception {
@@ -48,6 +61,8 @@ public class CategoriaServicioImpl implements CategoriaServicio {
         categoriaRepo.deleteById(id);
     }
 
+
+    //cualquier usuario
     @Override
     public CategoriaDTO obtenerCategoria(String id) throws Exception {
         if (id == null || id.isBlank()) {
@@ -63,6 +78,8 @@ public class CategoriaServicioImpl implements CategoriaServicio {
         return categoriaMapper.toDTO(optionalCategoria.get());
     }
 
+
+    //cualquier usuario
     @Override
     public List<CategoriaDTO> listarCategorias() throws Exception {
         List<Categoria> categorias = categoriaRepo.findAll();
