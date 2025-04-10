@@ -3,13 +3,12 @@ package co.edu.uniquindio.proyecto.mapper;
 import co.edu.uniquindio.proyecto.dto.CrearReporteDTO;
 import co.edu.uniquindio.proyecto.dto.EditarReporteDTO;
 import co.edu.uniquindio.proyecto.dto.ReporteDTO;
+import co.edu.uniquindio.proyecto.dto.UbicacionDTO;
 import co.edu.uniquindio.proyecto.modelo.documentos.Reporte;
 import org.mapstruct.*;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
-import co.edu.uniquindio.proyecto.dto.UbicacionDTO;
 
-
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface ReporteMapper {
@@ -29,17 +28,14 @@ public interface ReporteMapper {
                 reporte.getFechaCreacion(),
                 reporte.getEstado(),
                 geoJsonPointToUbicacionDTO(reporte.getUbicacion()),
-                reporte.getConteoImportante()
+                reporte.getConteoImportante(),
+                reporte.getPromedioEstrellas(),     // <-- Nuevo
+                reporte.getCalificaciones()         // <-- Nuevo
         );
-
     }
+
     default UbicacionDTO geoJsonPointToUbicacionDTO(GeoJsonPoint point) {
         if (point == null) return null;
         return new UbicacionDTO(point.getY(), point.getX()); // Y = latitud, X = longitud
     }
-
-
 }
-
-
-

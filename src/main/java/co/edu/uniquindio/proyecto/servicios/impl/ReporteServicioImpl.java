@@ -1,10 +1,13 @@
 package co.edu.uniquindio.proyecto.servicios.impl;
 
 import co.edu.uniquindio.proyecto.dto.*;
+import co.edu.uniquindio.proyecto.excepciones.ElementoNoEncontradoException;
 import co.edu.uniquindio.proyecto.mapper.ReporteMapper;
+import co.edu.uniquindio.proyecto.modelo.documentos.Categoria;
 import co.edu.uniquindio.proyecto.modelo.documentos.Comentario;
 import co.edu.uniquindio.proyecto.modelo.documentos.Reporte;
 import co.edu.uniquindio.proyecto.modelo.enums.EstadoReporte;
+import co.edu.uniquindio.proyecto.repositorios.CategoriaRepo;
 import co.edu.uniquindio.proyecto.repositorios.ReporteRepo;
 import co.edu.uniquindio.proyecto.servicios.EmailServicio;
 import co.edu.uniquindio.proyecto.servicios.ReporteServicio;
@@ -37,32 +40,35 @@ public class ReporteServicioImpl implements ReporteServicio {
     private final ReporteMapper reporteMapper;
     private final WebSocketNotificationService webSocketNotificationService;
     private final EmailServicio emailServicio;
+    private final CategoriaRepo categoriaRepo;
+
 
     @Override
-    public Reporte crearReporte(CrearReporteDTO crearReporteDTO) throws Exception{
+    public Reporte crearReporte(CrearReporteDTO crearReporteDTO) throws Exception {
 
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String idUsuarioAutenticado = user.getUsername();
 
-        // Verificar que el usuario autenticado solo pueda modificar su propia cuenta
         if (!crearReporteDTO.idUsuario().equals(idUsuarioAutenticado)) {
             throw new IllegalAccessException("El id del usuario del login no coincide con el id del creador del reporte.");
         }
 
-        // Crear el punto GeoJSON a partir de la ubicación recibida
+        // Validar existencia de la categoría ignorando mayúsculas/minúsculas
+        Categoria categoria = categoriaRepo.findByNombreIgnoreCase(crearReporteDTO.categoria())
+                .orElseThrow(() -> new IllegalArgumentException("La categoría '" + crearReporteDTO.categoria() + "' no existe."));
+
         GeoJsonPoint geoPoint = new GeoJsonPoint(
                 crearReporteDTO.ubicacionDTO().longitud(),
                 crearReporteDTO.ubicacionDTO().latitud()
         );
-        ;
-        // Construir el reporte
+
         Reporte reporte = Reporte.builder()
                 .nombre(crearReporteDTO.titulo())
                 .descripcion(crearReporteDTO.descripcion())
-                .categoria(crearReporteDTO.categoria().toUpperCase())
-                .usuarioId(crearReporteDTO.idUsuario())
-                .fechaCreacion(crearReporteDTO.fechaCreacion()) // Ya se recibe desde el DTO
-                .estado(crearReporteDTO.estado())               // Ya se recibe desde el DTO
+                .categoria(categoria.getNombre()) // Guardamos el nombre tal como está en la BD
+                .usuarioId(idUsuarioAutenticado)
+                .fechaCreacion(crearReporteDTO.fechaCreacion())
+                .estado(crearReporteDTO.estado())
                 .ubicacion(geoPoint)
                 // .rutaImagenes(crearReporteDTO.rutaImagenes()) // Descomenta si manejas imágenes
                 .build();
@@ -263,5 +269,76 @@ public class ReporteServicioImpl implements ReporteServicio {
     public Page<Reporte> obtenerReportesCercanos(double longitud, double latitud, Pageable pageable) {
         return reporteRepo.obtenerCercanos(longitud, latitud, pageable);
     }
+
+
+    @Override
+    public List<ReporteDTO> buscarReportes(BuscarReporteDTO filtros) throws Exception {
+        List<Reporte> reportes = reporteRepo.findAll().stream()
+                .filter(reporte -> {
+                    boolean coincide = true;
+
+                    if (filtros.txtConsulta() != null && !filtros.txtConsulta().isBlank()) {
+                        String texto = filtros.txtConsulta().toLowerCase();
+                        coincide = coincide && (
+                                reporte.getNombre().toLowerCase().contains(texto) ||
+                                        reporte.getDescripcion().toLowerCase().contains(texto)
+                        );
+                    }
+
+                    if (filtros.categoria() != null && !filtros.categoria().isBlank()) {
+                        coincide = coincide && reporte.getCategoria().equalsIgnoreCase(filtros.categoria());
+                    }
+
+                    if (filtros.estado() != null && !filtros.estado().isBlank()) {
+                        coincide = coincide && reporte.getEstado().name().equalsIgnoreCase(filtros.estado());
+                    }
+
+                    if (filtros.fechaInicio() != null) {
+                        coincide = coincide && !reporte.getFechaCreacion().toLocalDate().isBefore(filtros.fechaInicio());
+                    }
+
+                    if (filtros.fechaFin() != null) {
+                        coincide = coincide && !reporte.getFechaCreacion().toLocalDate().isAfter(filtros.fechaFin());
+                    }
+
+                    if (filtros.latitud() != null && filtros.longitud() != null) {
+                        // Puedes agregar lógica geográfica si deseas por distancia
+                        coincide = coincide && reporte.getUbicacion().getY() == filtros.latitud()
+                                && reporte.getUbicacion().getX() == filtros.longitud();
+                    }
+
+                    return coincide;
+                })
+                .toList();
+
+        return reportes.stream().map(reporteMapper::toDTO).toList();
+    }
+
+
+    @Override
+    public void calificarReporte(String idReporte, int estrellas) throws Exception {
+        Reporte reporte = reporteRepo.findById(idReporte)
+                .orElseThrow(() -> new ElementoNoEncontradoException("Reporte no encontrado"));
+
+        if (estrellas < 1 || estrellas > 5) {
+            throw new IllegalArgumentException("Número de estrellas inválido");
+        }
+
+        reporte.getCalificaciones().add(estrellas);
+
+        double promedio = reporte.getCalificaciones()
+                .stream()
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(0.0);
+
+        reporte.setPromedioEstrellas(promedio);
+        reporteRepo.save(reporte);
+    }
+
+
+
+
+
 
 }

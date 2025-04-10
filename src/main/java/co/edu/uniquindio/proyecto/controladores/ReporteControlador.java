@@ -169,5 +169,27 @@ public class ReporteControlador {
     }
 
 
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/buscar")
+    public ResponseEntity<MensajeDTO<List<ReporteDTO>>> buscarReportes(@Valid BuscarReporteDTO filtros) throws Exception {
+        List<ReporteDTO> resultados = reporteServicio.buscarReportes(filtros);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Lista de reportes filtrados obtenida correctamente", resultados));
+    }
+
+
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/{id}/calificacion")
+    public ResponseEntity<MensajeDTO<String>> calificarReporte(
+            @PathVariable String id,
+            @Valid @RequestBody CalificacionDTO dto) throws Exception {
+
+        reporteServicio.calificarReporte(id, dto.estrellas());
+
+        return ResponseEntity.ok(
+                new MensajeDTO<>(false, "Calificación registrada correctamente", null)
+        );
+    }
+
+
 
 }

@@ -189,21 +189,35 @@ public class UsuarioServicioImpl implements UsuarioServicio {
 
     @Override
     public List<UsuarioDTO> listarTodos(String nombre, String ciudad, int pagina) {
-        if (pagina < 0) throw new RuntimeException("La página no puede ser menor a 0");
-
-        Query query = new Query().with(PageRequest.of(pagina, 5));
-
-        if (nombre != null && !nombre.isEmpty()) {
-            query.addCriteria(Criteria.where("nombre").regex("^" + nombre, "i"));
+        if (pagina < 0) {
+            throw new RuntimeException("La página no puede ser menor a 0");
         }
 
-        if (ciudad != null && !ciudad.isEmpty()) {
-            query.addCriteria(Criteria.where("ciudad").is(ciudad));
+        Query query = new Query();
+
+        // Filtros opcionales
+        if (nombre != null && !nombre.isBlank()) {
+            query.addCriteria(Criteria.where("nombre").regex(nombre, "i"));
         }
 
+        if (ciudad != null && !ciudad.isBlank()) {
+            query.addCriteria(Criteria.where("ciudad").regex(ciudad, "i"));
+        }
+
+        // Solo rol CLIENTE
+        query.addCriteria(Criteria.where("rol").is(Rol.CLIENTE.name()));
+
+        // Paginación
+        query.with(PageRequest.of(pagina, 5));
+
+        // Consulta
         List<Usuario> usuarios = mongoTemplate.find(query, Usuario.class);
+
+        // Mapear a DTO
         return usuarios.stream().map(usuarioMapper::toDTO).toList();
     }
+
+
 
 
     private Usuario obtenerPorId(String id) throws ElementoNoEncontradoException {
@@ -232,14 +246,16 @@ public class UsuarioServicioImpl implements UsuarioServicio {
         Usuario usuario = usuarioRepo.findByEmail(cambiarPasswordDTO.email())
                 .orElseThrow(() -> new ElementoNoEncontradoException("No se encontró el usuario con ese email"));
 
-        // Verificar que la contraseña actual sea correcta
-        if (!usuario.getPassword().equals(cambiarPasswordDTO.passwordActual())) {
+        // Verificar que la contraseña actual sea correcta (comparar encriptada)
+        if (!passwordEncoder.matches(cambiarPasswordDTO.passwordActual(), usuario.getPassword())) {
             throw new Exception("La contraseña actual es incorrecta");
         }
 
-        // Cambiar la contraseña
-        usuario.setPassword(cambiarPasswordDTO.nuevaPassword());
+        // Encriptar la nueva contraseña antes de guardarla
+        String nuevaPasswordEncriptada = passwordEncoder.encode(cambiarPasswordDTO.nuevaPassword());
+        usuario.setPassword(nuevaPasswordEncriptada);
         usuarioRepo.save(usuario);
+
         return true;
     }
 

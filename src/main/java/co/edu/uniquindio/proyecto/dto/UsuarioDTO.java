@@ -1,6 +1,7 @@
 package co.edu.uniquindio.proyecto.dto;
 
 import co.edu.uniquindio.proyecto.modelo.enums.Ciudad;
+import co.edu.uniquindio.proyecto.modelo.enums.EstadoUsuario;
 
 public record UsuarioDTO(
         String id,
@@ -8,6 +9,7 @@ public record UsuarioDTO(
         Ciudad ciudad,
         String direccion,
         String telefono,
-        String email
+        String email,
+        EstadoUsuario estado
 ) {
 }
