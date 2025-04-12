@@ -17,6 +17,7 @@ public interface CategoriaRepo extends  MongoRepository<Categoria, String>  {
     @Query("{ 'nombre': { $regex: ?0, $options: 'i' } }")
     Optional<Categoria> findByNombreIgnoreCase(String nombre);
 
+    boolean existsByNombreIgnoreCase(String nombre);
 
 }
 

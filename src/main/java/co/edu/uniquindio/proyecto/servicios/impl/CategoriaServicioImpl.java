@@ -3,7 +3,7 @@ package co.edu.uniquindio.proyecto.servicios.impl;
 import co.edu.uniquindio.proyecto.dto.ActualizarCategoriaDTO;
 import co.edu.uniquindio.proyecto.dto.CategoriaDTO;
 import co.edu.uniquindio.proyecto.dto.CrearCategoriaDTO;
-import co.edu.uniquindio.proyecto.excepciones.ElementoNoEncontradoException;
+import co.edu.uniquindio.proyecto.excepciones.RecursoNoEncontradoException;
 import co.edu.uniquindio.proyecto.mapper.CategoriaMapper;
 import co.edu.uniquindio.proyecto.modelo.documentos.Categoria;
 import co.edu.uniquindio.proyecto.repositorios.CategoriaRepo;
@@ -39,7 +39,7 @@ public class CategoriaServicioImpl implements CategoriaServicio {
     @Override
     public void actualizarCategoria(String id, ActualizarCategoriaDTO dto) throws Exception {
         Categoria categoria = categoriaRepo.findById(id)
-                .orElseThrow(() -> new ElementoNoEncontradoException("Categoría no encontrada"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada"));
 
         if (dto.nombre() == null || dto.nombre().isBlank()) {
             throw new IllegalArgumentException("El nombre no puede estar vacío");
@@ -54,7 +54,7 @@ public class CategoriaServicioImpl implements CategoriaServicio {
     @Override
     public void eliminarCategoria(String id) throws Exception {
         if (!categoriaRepo.existsById(id)) {
-            throw new ElementoNoEncontradoException("Categoría no encontrada");
+            throw new RecursoNoEncontradoException("Categoría no encontrada");
         }
         categoriaRepo.deleteById(id);
     }
@@ -65,9 +65,10 @@ public class CategoriaServicioImpl implements CategoriaServicio {
             throw new IllegalArgumentException("El ID de la categoría no puede estar vacío");
         }
 
-        return categoriaRepo.findById(id)
-                .map(categoriaMapper::toDTO)
-                .orElseThrow(() -> new ElementoNoEncontradoException("Categoría no encontrada con id: " + id));
+        Categoria categoria = categoriaRepo.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada con id: " + id));
+
+        return categoriaMapper.toDTO(categoria);
     }
 
     @Override
@@ -75,7 +76,7 @@ public class CategoriaServicioImpl implements CategoriaServicio {
         List<Categoria> categorias = categoriaRepo.findAll();
 
         if (categorias.isEmpty()) {
-            throw new ElementoNoEncontradoException("No hay categorías registradas.");
+            throw new RecursoNoEncontradoException("No hay categorías registradas.");
         }
 
         return categorias.stream()
@@ -83,3 +84,4 @@ public class CategoriaServicioImpl implements CategoriaServicio {
                 .toList();
     }
 }
+
