@@ -3,6 +3,7 @@ package co.edu.uniquindio.proyecto.servicios.impl;
 import co.edu.uniquindio.proyecto.dto.ActualizarCategoriaDTO;
 import co.edu.uniquindio.proyecto.dto.CategoriaDTO;
 import co.edu.uniquindio.proyecto.dto.CrearCategoriaDTO;
+import co.edu.uniquindio.proyecto.excepciones.RecursoNoEncontradoException;
 import co.edu.uniquindio.proyecto.excepciones.ElementoNoEncontradoException;
 import co.edu.uniquindio.proyecto.mapper.CategoriaMapper;
 import co.edu.uniquindio.proyecto.modelo.documentos.Categoria;
@@ -39,6 +40,7 @@ public class CategoriaServicioImpl implements CategoriaServicio {
     @Override
     public void actualizarCategoria(String id, ActualizarCategoriaDTO dto) throws Exception {
         Categoria categoria = categoriaRepo.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada"));
                 .orElseThrow(() -> new ElementoNoEncontradoException("Categoría no encontrada"));
 
         if (dto.nombre() == null || dto.nombre().isBlank()) {
@@ -54,6 +56,7 @@ public class CategoriaServicioImpl implements CategoriaServicio {
     @Override
     public void eliminarCategoria(String id) throws Exception {
         if (!categoriaRepo.existsById(id)) {
+            throw new RecursoNoEncontradoException("Categoría no encontrada");
             throw new ElementoNoEncontradoException("Categoría no encontrada");
         }
         categoriaRepo.deleteById(id);
@@ -65,6 +68,11 @@ public class CategoriaServicioImpl implements CategoriaServicio {
             throw new IllegalArgumentException("El ID de la categoría no puede estar vacío");
         }
 
+        Categoria categoria = categoriaRepo.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada con id: " + id));
+
+        return categoriaMapper.toDTO(categoria);
+
         return categoriaRepo.findById(id)
                 .map(categoriaMapper::toDTO)
                 .orElseThrow(() -> new ElementoNoEncontradoException("Categoría no encontrada con id: " + id));
@@ -75,6 +83,7 @@ public class CategoriaServicioImpl implements CategoriaServicio {
         List<Categoria> categorias = categoriaRepo.findAll();
 
         if (categorias.isEmpty()) {
+            throw new RecursoNoEncontradoException("No hay categorías registradas.");
             throw new ElementoNoEncontradoException("No hay categorías registradas.");
         }
 
@@ -83,3 +92,4 @@ public class CategoriaServicioImpl implements CategoriaServicio {
                 .toList();
     }
 }
+
