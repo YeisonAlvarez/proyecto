@@ -4,7 +4,9 @@ import co.edu.uniquindio.proyecto.modelo.enums.EstadoReporte;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public record ReporteDTO(
         String id,
@@ -15,12 +17,8 @@ public record ReporteDTO(
         EstadoReporte estado,
         UbicacionDTO ubicacionDTO,
         int conteoImportantes,
-
-
         double promedioEstrellas,
-        List<Integer> calificaciones
-
-
+        Map<String, Integer> calificaciones
 
 ) {}
 
