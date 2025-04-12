@@ -82,6 +82,6 @@ public class CategoriaServicioImpl implements CategoriaServicio {
         return categorias.stream()
                 .map(categoriaMapper::toDTO)
                 .toList();
-    }
+     }
 }
 
