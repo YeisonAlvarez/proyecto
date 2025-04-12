@@ -7,12 +7,15 @@ import org.bson.types.ObjectId;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+
+
 @Mapper(componentModel = "spring")
 public interface CategoriaMapper {
 
     Categoria toDocument(CrearCategoriaDTO crearCategoriaDTO);
 
     @Mapping(source = "id", target = "id")
+
     CategoriaDTO toDTO(Categoria categoria);
 
     // Métodos de conversión para ObjectId ↔ String

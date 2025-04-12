@@ -4,6 +4,7 @@ import co.edu.uniquindio.proyecto.dto.ActualizarCategoriaDTO;
 import co.edu.uniquindio.proyecto.dto.CategoriaDTO;
 import co.edu.uniquindio.proyecto.dto.CrearCategoriaDTO;
 import co.edu.uniquindio.proyecto.excepciones.RecursoNoEncontradoException;
+import co.edu.uniquindio.proyecto.excepciones.ElementoNoEncontradoException;
 import co.edu.uniquindio.proyecto.mapper.CategoriaMapper;
 import co.edu.uniquindio.proyecto.modelo.documentos.Categoria;
 import co.edu.uniquindio.proyecto.repositorios.CategoriaRepo;
@@ -40,6 +41,8 @@ public class CategoriaServicioImpl implements CategoriaServicio {
     public void actualizarCategoria(String id, ActualizarCategoriaDTO dto) throws Exception {
         Categoria categoria = categoriaRepo.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada"));
+                .orElseThrow(() -> new ElementoNoEncontradoException("Categoría no encontrada"));
+
 
         if (dto.nombre() == null || dto.nombre().isBlank()) {
             throw new IllegalArgumentException("El nombre no puede estar vacío");
@@ -55,6 +58,7 @@ public class CategoriaServicioImpl implements CategoriaServicio {
     public void eliminarCategoria(String id) throws Exception {
         if (!categoriaRepo.existsById(id)) {
             throw new RecursoNoEncontradoException("Categoría no encontrada");
+            throw new ElementoNoEncontradoException("Categoría no encontrada");
         }
         categoriaRepo.deleteById(id);
     }
@@ -69,7 +73,12 @@ public class CategoriaServicioImpl implements CategoriaServicio {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada con id: " + id));
 
         return categoriaMapper.toDTO(categoria);
-    }
+
+
+        return categoriaRepo.findById(id)
+                .map(categoriaMapper::toDTO)
+                .orElseThrow(() -> new ElementoNoEncontradoException("Categoría no encontrada con id: " + id));
+
 
     @Override
     public List<CategoriaDTO> listarCategorias() throws Exception {
@@ -77,6 +86,8 @@ public class CategoriaServicioImpl implements CategoriaServicio {
 
         if (categorias.isEmpty()) {
             throw new RecursoNoEncontradoException("No hay categorías registradas.");
+
+            throw new ElementoNoEncontradoException("No hay categorías registradas.");
         }
 
         return categorias.stream()
