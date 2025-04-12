@@ -18,10 +18,4 @@ public class Categoria {
     private String nombre;
     private String descripcion;
 
-    @Builder
-    public Categoria( String nombre, String descripcion) {
-        this.nombre = nombre;
-        this.descripcion = descripcion;
-    }
-
 }
