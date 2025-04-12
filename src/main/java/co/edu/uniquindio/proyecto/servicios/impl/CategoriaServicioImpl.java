@@ -43,6 +43,7 @@ public class CategoriaServicioImpl implements CategoriaServicio {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada"));
                 .orElseThrow(() -> new ElementoNoEncontradoException("Categoría no encontrada"));
 
+
         if (dto.nombre() == null || dto.nombre().isBlank()) {
             throw new IllegalArgumentException("El nombre no puede estar vacío");
         }
@@ -73,10 +74,11 @@ public class CategoriaServicioImpl implements CategoriaServicio {
 
         return categoriaMapper.toDTO(categoria);
 
+
         return categoriaRepo.findById(id)
                 .map(categoriaMapper::toDTO)
                 .orElseThrow(() -> new ElementoNoEncontradoException("Categoría no encontrada con id: " + id));
-    }
+
 
     @Override
     public List<CategoriaDTO> listarCategorias() throws Exception {
@@ -84,6 +86,7 @@ public class CategoriaServicioImpl implements CategoriaServicio {
 
         if (categorias.isEmpty()) {
             throw new RecursoNoEncontradoException("No hay categorías registradas.");
+
             throw new ElementoNoEncontradoException("No hay categorías registradas.");
         }
 

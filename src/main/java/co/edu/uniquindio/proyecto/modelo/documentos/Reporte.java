@@ -10,10 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 @Setter
@@ -47,7 +44,7 @@ public class Reporte {
     private List<Comentario> comentarios = new ArrayList<>();
 
     @Field
-    private List<Integer> calificaciones = new ArrayList<>();
+    private Map<String, Integer> calificaciones = new HashMap<>();
 
     @Field
     private double promedioEstrellas;

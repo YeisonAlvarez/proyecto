@@ -47,6 +47,7 @@ public class CategoriaControlador {
     @GetMapping("/{id}")
     public ResponseEntity<MensajeDTO<CategoriaDTO>> obtener(@PathVariable String id) throws Exception {
         CategoriaDTO info = categoriaServicio.obtenerCategoria(id);
+        return ResponseEntity.ok(new MensajeDTO<>(false, "Categoría obtenida correctamente", info));
 
         return ResponseEntity.ok(new MensajeDTO<>(false, "Categoría obtenida correctamente", info));
         return ResponseEntity.ok(new MensajeDTO<>(false, "Categoría", info));
@@ -58,6 +59,8 @@ public class CategoriaControlador {
         List<CategoriaDTO> lista = categoriaServicio.listarCategorias();
         return ResponseEntity.ok(new MensajeDTO<>(false, "Lista de categorías obtenida con éxito", lista));
     }
+}
+
 }
 
 }

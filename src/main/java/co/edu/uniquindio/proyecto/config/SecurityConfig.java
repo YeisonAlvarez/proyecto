@@ -66,6 +66,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/categorias/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categorias").permitAll()
 
+                        .requestMatchers(HttpMethod.GET, "/api/comentarios/**").permitAll()
+
 
                         // Rutas solo para CLIENTES autenticados
                         .requestMatchers(HttpMethod.POST, "/api/usuarios/notificaciones/suscribirse").hasAuthority("ROLE_CLIENTE")
@@ -78,16 +80,23 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/reportes/{id}").hasAuthority("ROLE_CLIENTE")
                         .requestMatchers(HttpMethod.POST, "/api/reportes/{id}/importante").hasAuthority("ROLE_CLIENTE")
                         .requestMatchers(HttpMethod.POST, "/api/reportes/{id}/calificacion").hasAuthority("ROLE_CLIENTE")
+                        .requestMatchers(HttpMethod.GET, "/api/reportes/mis-reportes").hasAuthority("ROLE_CLIENTE")
+
+                        .requestMatchers(HttpMethod.POST, "/api/comentarios/**").hasAuthority("ROLE_CLIENTE")
+
 
                         // Rutas solo para ADMINISTRADORES
                         .requestMatchers(HttpMethod.POST, "/api/categorias").hasAuthority("ROLE_ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/categorias/{id}").hasAuthority("ROLE_ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/categorias/{id}").hasAuthority("ROLE_ADMINISTRADOR")
 
-                        .requestMatchers(HttpMethod.PUT, "/api/reportes/{id}/estado").hasAuthority("ROLE_ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/reportes/informe").hasAuthority("ROLE_ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/reportes/filtrar").hasAuthority("ROLE_ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/usuarios").hasAuthority("ROLE_ADMINISTRADOR")
+
+                        // Ruta administradores y clientes
+                        .requestMatchers(HttpMethod.PUT, "/api/reportes/{id}/cambiarEstado").hasAuthority("ROLE_ADMINISTRADOR")
+
 
                         // Todo lo demás requiere autenticación
                         .anyRequest().authenticated()

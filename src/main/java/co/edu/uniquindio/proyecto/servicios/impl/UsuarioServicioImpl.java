@@ -1,8 +1,7 @@
 package co.edu.uniquindio.proyecto.servicios.impl;
 
 import co.edu.uniquindio.proyecto.dto.*;
-import co.edu.uniquindio.proyecto.excepciones.ElementoNoEncontradoException;
-import co.edu.uniquindio.proyecto.excepciones.ElementoRepetidoException;
+import co.edu.uniquindio.proyecto.excepciones.*;
 import co.edu.uniquindio.proyecto.mapper.UsuarioMapper;
 import co.edu.uniquindio.proyecto.modelo.documentos.Usuario;
 import co.edu.uniquindio.proyecto.modelo.enums.Ciudad;
@@ -99,8 +98,9 @@ public class UsuarioServicioImpl implements UsuarioServicio {
 
                     // Verificar que el token no haya expirado
                     if (claims.getExpiration().before(new Date())) {
-                        return false; // Token expirado
+                        throw new TokenExpiradoException("El token de activación ha expirado.");
                     }
+
 
                     // Comparar el token con el que llegó
                     if (usuario.getTokenActivacion().equals(codigo)) {
@@ -111,11 +111,11 @@ public class UsuarioServicioImpl implements UsuarioServicio {
                     }
                 }
 
-            } catch (ExpiredJwtException e) {
-                return false; // Token expirado
-            } catch (Exception e) {
-                return false; // Token inválido
-            }
+            }  catch (ExpiredJwtException e) {
+            throw new TokenExpiradoException("El token ha expirado.");
+        } catch (Exception e) {
+            throw new TokenInvalidoException("El token de activación es inválido.");
+        }
         }
 
         return false;
@@ -131,12 +131,13 @@ public class UsuarioServicioImpl implements UsuarioServicio {
 
         // Verificar que el usuario autenticado solo pueda eliminar su propia cuenta
         if (!id.equals(idUsuarioAutenticado)) {
-            throw new IllegalAccessException("No puedes eliminar la cuenta de otro usuario.");
+            throw new AccesoNoAutorizadoException("No puedes eliminar la cuenta de otro usuario.");
         }
+
 
         // Buscar el usuario en la base de datos
         Usuario usuario = usuarioRepo.findById(objectId)
-                .orElseThrow(() -> new ElementoNoEncontradoException("No se encontró un usuario con el ID: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontró un usuario con el ID: " + id));
 
         // Eliminar lógicamente el usuario (cambiando su estado en lugar de eliminar físicamente)
         usuario.setEstado(EstadoUsuario.ELIMINADO); // Asegúrate de que `EstadoUsuario` tenga un valor `INACTIVO`
@@ -154,12 +155,13 @@ public class UsuarioServicioImpl implements UsuarioServicio {
 
         // Verificar que el usuario autenticado solo pueda modificar su propia cuenta
         if (!id.equals(idUsuarioAutenticado)) {
-            throw new IllegalAccessException("No puedes editar la cuenta de otro usuario.");
+            throw new AccesoNoAutorizadoException("No puedes editar la cuenta de otro usuario.");
         }
+
 
         // Buscar el usuario en la base de datos
         Usuario cuentaModificada = usuarioRepo.findById(objectId)
-                .orElseThrow(() -> new ElementoNoEncontradoException("No se encontró un usuario con el ID: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontró un usuario con el ID: " + id));
 
         // Actualizar solo los campos necesarios si se envían en el request
         if (editarUsuarioDTO.ciudad() != null) {
@@ -181,7 +183,7 @@ public class UsuarioServicioImpl implements UsuarioServicio {
 
 
     @Override
-    public UsuarioDTO obtener(String id) throws ElementoNoEncontradoException {
+    public UsuarioDTO obtener(String id) throws RecursoNoEncontradoException {
         Usuario usuario = obtenerPorId(id);
         return usuarioMapper.toDTO(usuario);
     }
@@ -190,7 +192,7 @@ public class UsuarioServicioImpl implements UsuarioServicio {
     @Override
     public List<UsuarioDTO> listarTodos(String nombre, String ciudad, int pagina) {
         if (pagina < 0) {
-            throw new RuntimeException("La página no puede ser menor a 0");
+            throw new ParametroInvalidoException("La página no puede ser menor a 0");
         }
 
         Query query = new Query();
@@ -220,10 +222,10 @@ public class UsuarioServicioImpl implements UsuarioServicio {
 
 
 
-    private Usuario obtenerPorId(String id) throws ElementoNoEncontradoException {
+    private Usuario obtenerPorId(String id) throws RecursoNoEncontradoException {
         // Buscamos el usuario que se quiere obtener
         if (!ObjectId.isValid(id)) {
-            throw new ElementoNoEncontradoException("No se encontró el usuario con el id "+id);
+            throw new RecursoNoEncontradoException("No se encontró el usuario con el id "+id);
         }
 
         // Convertimos el id de String a ObjectId
@@ -232,7 +234,7 @@ public class UsuarioServicioImpl implements UsuarioServicio {
 
         // Si no se encontró el usuario, lanzamos una excepción
         if(optionalCuenta.isEmpty()){
-            throw new ElementoNoEncontradoException("No se encontró el usuario con el id "+id);
+            throw new RecursoNoEncontradoException("No se encontró el usuario con el id "+id);
         }
 
         return optionalCuenta.get();
@@ -244,12 +246,12 @@ public class UsuarioServicioImpl implements UsuarioServicio {
     public boolean cambiarPassword(CambiarPasswordDTO cambiarPasswordDTO) throws Exception {
         // Buscar el usuario por su email
         Usuario usuario = usuarioRepo.findByEmail(cambiarPasswordDTO.email())
-                .orElseThrow(() -> new ElementoNoEncontradoException("No se encontró el usuario con ese email"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontró el usuario con ese email"));
 
-        // Verificar que la contraseña actual sea correcta (comparar encriptada)
         if (!passwordEncoder.matches(cambiarPasswordDTO.passwordActual(), usuario.getPassword())) {
-            throw new Exception("La contraseña actual es incorrecta");
+            throw new ValidacionException("La contraseña actual es incorrecta");
         }
+
 
         // Encriptar la nueva contraseña antes de guardarla
         String nuevaPasswordEncriptada = passwordEncoder.encode(cambiarPasswordDTO.nuevaPassword());
@@ -267,7 +269,7 @@ public class UsuarioServicioImpl implements UsuarioServicio {
                 "tipo", "activacion"
         );
 
-        String token = jwtUtils.generateToken(email, claims, 15); // 15 minutos
+        String token = jwtUtils.generateToken(email, claims, 15);
 
         Instant expiracion = Instant.now().plus(15, ChronoUnit.MINUTES);
 
@@ -279,11 +281,12 @@ public class UsuarioServicioImpl implements UsuarioServicio {
     public void reenviarToken(String email) throws Exception {
 
         Usuario usuario = usuarioRepo.findByEmail(email)
-                .orElseThrow(() -> new Exception("No existe un usuario con ese email"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe un usuario con ese email"));
 
         if (usuario.getEstado() == EstadoUsuario.ACTIVO) {
-            throw new Exception("La cuenta ya fue activada");
+            throw new AccionDuplicadaException("La cuenta ya fue activada");
         }
+
 
         GenerarTokenDTO nuevoToken = generarToken(email);
         usuario.setTokenActivacion(nuevoToken.token());

@@ -1,33 +1,21 @@
 package co.edu.uniquindio.proyecto.controladores;
 
-import ch.qos.logback.core.net.SyslogOutputStream;
 import co.edu.uniquindio.proyecto.dto.*;
-import co.edu.uniquindio.proyecto.excepciones.ElementoNoEncontradoException;
 import co.edu.uniquindio.proyecto.mapper.ReporteMapper;
 import co.edu.uniquindio.proyecto.modelo.documentos.Reporte;
-import co.edu.uniquindio.proyecto.modelo.enums.EstadoReporte;
 import co.edu.uniquindio.proyecto.seguridad.JWTUtils;
 import co.edu.uniquindio.proyecto.servicios.ReporteServicio;
-import io.jsonwebtoken.Jwt;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 
 import java.time.LocalDateTime;
@@ -68,7 +56,7 @@ public class ReporteControlador {
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<ReporteDTO> obtenerReportePorId(@PathVariable String id) {
+    public ResponseEntity<ReporteDTO> obtenerReportePorId(@PathVariable String id) throws Exception{
         Reporte reporte = reporteServicio.obtenerReportePorId(id);
         ReporteDTO reporteDTO = reporteMapper.toDTO(reporte);
         return ResponseEntity.ok(reporteDTO);
@@ -86,7 +74,7 @@ public class ReporteControlador {
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<MensajeDTO<String>> eliminarReporte(@PathVariable String id) {
+    public ResponseEntity<MensajeDTO<String>> eliminarReporte(@PathVariable String id)   throws Exception{
         reporteServicio.eliminarReporte(id);
         return ResponseEntity.ok(new MensajeDTO<String>(false, "Reporte eliminado exitosamente",null));
     }
@@ -95,7 +83,7 @@ public class ReporteControlador {
 
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/{id}/importante")
-    public ResponseEntity<MensajeDTO<String>> marcarImportante(@PathVariable String id) {
+    public ResponseEntity<MensajeDTO<String>> marcarImportante(@PathVariable String id) throws  Exception{
 
         // Llamar al servicio
         boolean resultado = reporteServicio.marcarImportante(id);
@@ -109,28 +97,23 @@ public class ReporteControlador {
 
 
 
-    @PostMapping("/{id}/cambiarEstado")
-    public ResponseEntity<MensajeDTO<String>> cambiarEstadoReporte(
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<?> cambiarEstado(
             @PathVariable String id,
-            @RequestBody EstadoReporteDTO estadoReporteDTO) {  // Recibimos el DTO
-
-        boolean resultado = reporteServicio.cambiarEstado(id, estadoReporteDTO);
-
-        if (resultado) {
-            return ResponseEntity.ok(new MensajeDTO<>(false, "Estado cambiado exitosamente",null));
-        } else {
-            return ResponseEntity.badRequest().body(new MensajeDTO<>(true, "No se pudo cambiar el estado",null));
-        }
+            @RequestBody EstadoReporteDTO dto) throws Exception {
+        boolean actualizado = reporteServicio.cambiarEstado(id, dto);
+        return ResponseEntity.ok("Estado actualizado correctamente.");
     }
+
 
     // mostrar el informe en PDF en el navegador
     @GetMapping(value = "/informe", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> generarInformePDF(
             @RequestParam String categoria,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaInicio,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaFin) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaFin) throws  Exception{
 
-        byte[] pdf = reporteServicio.generarInformePDF(categoria, fechaInicio, fechaFin);
+        byte[] pdf = reporteServicio.generarInformePDF(categoria, fechaInicio, fechaFin) ;
 
         //Descargar pdf
         return ResponseEntity.ok()
@@ -188,6 +171,13 @@ public class ReporteControlador {
         return ResponseEntity.ok(
                 new MensajeDTO<>(false, "Calificación registrada correctamente", null)
         );
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/mis-reportes")
+    public ResponseEntity<List<ReporteDTO>> obtenerMisReportes() throws Exception {
+        List<ReporteDTO> reportes = reporteServicio.obtenerReportesPorUsuario();
+        return ResponseEntity.ok(reportes);
     }
 
 
