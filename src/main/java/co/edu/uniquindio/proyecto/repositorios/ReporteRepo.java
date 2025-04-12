@@ -34,4 +34,6 @@ public interface ReporteRepo extends MongoRepository<Reporte, String> {
     List<Reporte> findByCategoriaAndFechaCreacionBetween(String categoria, LocalDateTime fechaInicio, LocalDateTime fechaFin);
 
     String categoria(String categoria);
+
+    List<Reporte> findByUsuarioId(String usuarioId);
 }

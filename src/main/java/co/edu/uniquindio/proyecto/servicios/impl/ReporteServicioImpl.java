@@ -1,7 +1,7 @@
 package co.edu.uniquindio.proyecto.servicios.impl;
 
 import co.edu.uniquindio.proyecto.dto.*;
-import co.edu.uniquindio.proyecto.excepciones.ElementoNoEncontradoException;
+import co.edu.uniquindio.proyecto.excepciones.*;
 import co.edu.uniquindio.proyecto.mapper.ReporteMapper;
 import co.edu.uniquindio.proyecto.modelo.documentos.Categoria;
 import co.edu.uniquindio.proyecto.modelo.documentos.Comentario;
@@ -19,8 +19,8 @@ import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.properties.TextAlignment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
@@ -29,6 +29,8 @@ import org.springframework.data.domain.Pageable;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,12 +52,12 @@ public class ReporteServicioImpl implements ReporteServicio {
         String idUsuarioAutenticado = user.getUsername();
 
         if (!crearReporteDTO.idUsuario().equals(idUsuarioAutenticado)) {
-            throw new IllegalAccessException("El id del usuario del login no coincide con el id del creador del reporte.");
+            throw new OperacionNoPermitidaException("El id del usuario autenticado no coincide con el creador del reporte.");
         }
 
-        // Validar existencia de la categoría ignorando mayúsculas/minúsculas
         Categoria categoria = categoriaRepo.findByNombreIgnoreCase(crearReporteDTO.categoria())
-                .orElseThrow(() -> new IllegalArgumentException("La categoría '" + crearReporteDTO.categoria() + "' no existe."));
+                .orElseThrow(() -> new RecursoNoEncontradoException("La categoría '" + crearReporteDTO.categoria() + "' no existe."));
+
 
         GeoJsonPoint geoPoint = new GeoJsonPoint(
                 crearReporteDTO.ubicacionDTO().longitud(),
@@ -73,6 +75,12 @@ public class ReporteServicioImpl implements ReporteServicio {
                 // .rutaImagenes(crearReporteDTO.rutaImagenes()) // Descomenta si manejas imágenes
                 .build();
 
+        webSocketNotificationService.notificarClientes( new NotificacionDTO(
+                "",
+                "",
+                "/topic/reports"
+        ) );
+
         return reporteRepo.save(reporte);
     }
 
@@ -82,7 +90,6 @@ public class ReporteServicioImpl implements ReporteServicio {
         return reporteRepo.findAll(pageable);
     }
 
-
     @Override
     public void editarReporte(String idReporte, EditarReporteDTO dto) throws Exception {
         Reporte reporte = obtenerReportePorId(idReporte);
@@ -91,15 +98,21 @@ public class ReporteServicioImpl implements ReporteServicio {
         String idUsuario = user.getUsername();
 
         if (!reporte.getUsuarioId().equals(idUsuario)) {
-            throw new IllegalAccessException("No puedes modificar un reporte que no te pertenece.");
+            throw new OperacionNoPermitidaException("No puedes modificar un reporte que no te pertenece.");
         }
 
-        // Validar si puede ser modificado (si está RECHAZADO, dentro de 5 días)
         if (reporte.getEstado() == EstadoReporte.RECHAZADO && reporte.getFechaRechazo() != null) {
             LocalDateTime fechaLimite = reporte.getFechaRechazo().plusDays(5);
             if (LocalDateTime.now().isAfter(fechaLimite)) {
-                throw new IllegalAccessException("El tiempo para modificar este reporte ha expirado.");
+                throw new OperacionNoPermitidaException("El tiempo para modificar este reporte ha expirado.");
             }
+        }
+
+        // Validar que la nueva categoría exista
+        String categoriaMayuscula = dto.getCategoria().toUpperCase();
+        boolean existeCategoria = categoriaRepo.existsByNombreIgnoreCase(categoriaMayuscula);
+        if (!existeCategoria) {
+            throw new IllegalArgumentException("La categoría '" + dto.getCategoria() + "' no existe.");
         }
 
         // Editar valores
@@ -117,64 +130,37 @@ public class ReporteServicioImpl implements ReporteServicio {
         reporteRepo.save(reporte);
     }
 
-
-
-
-
     @Override
-    public Reporte obtenerReportePorId(String id) {
+    public Reporte obtenerReportePorId(String id) throws Exception {
         Reporte reporte = reporteRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reporte no encontrado"));
-
-        System.out.println("Reporte encontrado: " + reporte);
+                .orElseThrow(() -> new RecursoNoEncontradoException("Reporte con ID '" + id + "' no encontrado"));
         return reporte;
     }
 
 
     @Override
-    public List<InfoReporteDTO> obtenerReporte(String categoria, EstadoReporteDTO estadoReporteDTO) {
-        return List.of();
-    }
-
-   // @Override
-   // public List<InfoReporteDTO> obtenerReportesUbicacion(Ubicacion ubicacion) {
-    //  return List.of();
-    //}
-
-    @Override
-    public void eliminarReporte(String id) {
+    public void eliminarReporte(String id) throws Exception {
+        if (!reporteRepo.existsById(id)) {
+            throw new RecursoNoEncontradoException("No se puede eliminar. Reporte con ID '" + id + "' no encontrado.");
+        }
         reporteRepo.deleteById(id);
     }
 
 
-    public boolean agregarComentario(String idReporte, ComentarioDTO comentarioDTO) {
-        Reporte reporte = reporteRepo.findById(idReporte)
-                .orElseThrow(() -> new RuntimeException("Reporte no encontrado"));
-
-        Comentario comentario = new Comentario(comentarioDTO.getIdUsuario(), comentarioDTO.getIdReporte(),
-                comentarioDTO.getComentario(), comentarioDTO.getFecha());
-        reporte.getComentarios().add(comentario);
-
-        reporteRepo.save(reporte);
-        return true;
-    }
-
     @Override
-    public boolean marcarImportante(String idReporte) {
+    public boolean marcarImportante(String idReporte) throws Exception {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String idUsuario = user.getUsername();
 
         Reporte reporte = reporteRepo.findById(idReporte)
-                .orElseThrow(() -> new RuntimeException("Reporte no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Reporte con ID '" + idReporte + "' no encontrado"));
 
-        // Verificar si el usuario es el creador del reporte
         if (reporte.getUsuarioId().equals(idUsuario)) {
-            return false; // No se permite que el creador lo marque como importante
+            throw new OperacionNoPermitidaException("No puedes marcar como importante tu propio reporte.");
         }
 
-        // Verificar si ya lo marcó antes
         if (reporte.getUsuariosQueMarcaronImportante().contains(idUsuario)) {
-            return false;
+            throw new OperacionNoPermitidaException("Ya has marcado este reporte como importante.");
         }
 
         // Marcar como importante
@@ -186,24 +172,59 @@ public class ReporteServicioImpl implements ReporteServicio {
     }
 
 
-
     @Override
-    public boolean cambiarEstado(String idReporte, EstadoReporteDTO estadoReporteDTO) {
+    public boolean cambiarEstado(String idReporte, EstadoReporteDTO estadoReporteDTO) throws Exception {
         Reporte reporte = reporteRepo.findById(idReporte)
-                .orElseThrow(() -> new RuntimeException("Reporte no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Reporte con ID '" + idReporte + "' no encontrado"));
 
         EstadoReporte nuevoEstado = EstadoReporte.valueOf(estadoReporteDTO.getNuevoEstado());
+
+        // Obtener info de usuario autenticado
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getPrincipal();
+        String idUsuario = user.getUsername();
+
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        boolean esAdmin = authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
+        boolean esCliente = authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_CLIENTE"));
+
+        if (esCliente) {
+            // Cliente solo puede cambiar su propio reporte a RESUELTO
+            if (!reporte.getUsuarioId().equals(idUsuario)) {
+                throw new AccesoNoAutorizadoException("No puedes cambiar el estado de reportes que no te pertenecen.");
+            }
+
+            if (nuevoEstado != EstadoReporte.RESUELTO) {
+                throw new AccesoNoAutorizadoException("Como cliente solo puedes marcar tu reporte como RESUELTO.");
+            }
+
+            // Si el reporte fue rechazado, verificar si está dentro de los 5 días permitidos
+            if (reporte.getEstado() == EstadoReporte.RECHAZADO && reporte.getFechaRechazo() != null) {
+                LocalDateTime limite = reporte.getFechaRechazo().plusDays(5);
+                if (LocalDateTime.now().isAfter(limite)) {
+                    throw new IllegalStateException("No puedes reenviar un reporte rechazado después de 5 días.");
+                }
+            }
+        }
+
+        if (esAdmin) {
+            if (nuevoEstado == EstadoReporte.RECHAZADO) {
+                if (estadoReporteDTO.getMotivo() == null || estadoReporteDTO.getMotivo().isBlank()) {
+                    throw new IllegalArgumentException("Debe proporcionar un motivo al rechazar el reporte.");
+                }
+                reporte.setFechaRechazo(LocalDateTime.now());
+            }
+        }
+
+        // Actualizar estado y motivo
         reporte.setEstado(nuevoEstado);
         reporte.setMotivoCambioEstado(estadoReporteDTO.getMotivo());
 
-        if (nuevoEstado == EstadoReporte.RECHAZADO) {
-            reporte.setFechaRechazo(LocalDateTime.now());
-        }
-
         reporteRepo.save(reporte);
-
         return true;
     }
+
+
 
     @Override
     public List<ReporteDTO> listarReportesPorCategoriaYFechas(String categoria, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
@@ -218,7 +239,7 @@ public class ReporteServicioImpl implements ReporteServicio {
     }
 
     @Override
-    public byte[] generarInformePDF(String categoria, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+    public byte[] generarInformePDF(String categoria, LocalDateTime fechaInicio, LocalDateTime fechaFin) throws Exception {
         try {
 
         } catch (IllegalArgumentException e) {
@@ -227,7 +248,7 @@ public class ReporteServicioImpl implements ReporteServicio {
 
         List<Reporte> reportes = reporteRepo.findByCategoriaAndFechaCreacionBetween(categoria, fechaInicio, fechaFin);
         if (reportes.isEmpty()) {
-            throw new RuntimeException("No hay reportes disponibles para la categoría y fechas proporcionadas.");
+            throw new RecursoNoEncontradoException("No hay reportes disponibles para la categoría y fechas proporcionadas.");
         }
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -273,6 +294,22 @@ public class ReporteServicioImpl implements ReporteServicio {
 
     @Override
     public List<ReporteDTO> buscarReportes(BuscarReporteDTO filtros) throws Exception {
+
+        if (filtros == null) {
+            throw new ValidacionException("Debe proporcionar un objeto de filtros para realizar la búsqueda.");
+        }
+
+        boolean hayFiltros = filtros.txtConsulta() != null ||
+                filtros.categoria() != null ||
+                filtros.estado() != null ||
+                filtros.fechaInicio() != null ||
+                filtros.fechaFin() != null ||
+                (filtros.latitud() != null && filtros.longitud() != null);
+
+        if (!hayFiltros) {
+            throw new ValidacionException("Debe especificar al menos un filtro para buscar reportes.");
+        }
+
         List<Reporte> reportes = reporteRepo.findAll().stream()
                 .filter(reporte -> {
                     boolean coincide = true;
@@ -317,16 +354,31 @@ public class ReporteServicioImpl implements ReporteServicio {
 
     @Override
     public void calificarReporte(String idReporte, int estrellas) throws Exception {
-        Reporte reporte = reporteRepo.findById(idReporte)
-                .orElseThrow(() -> new ElementoNoEncontradoException("Reporte no encontrado"));
 
-        if (estrellas < 1 || estrellas > 5) {
-            throw new IllegalArgumentException("Número de estrellas inválido");
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String idUsuario = user.getUsername();
+
+        Reporte reporte = reporteRepo.findById(idReporte)
+                .orElseThrow(() -> new RecursoNoEncontradoException("No se encontró el reporte con ID: " + idReporte));
+
+        if (reporte.getUsuarioId().equals(idUsuario)) {
+            throw new ParametroInvalidoException("No puedes calificar tu propio reporte.");
         }
 
-        reporte.getCalificaciones().add(estrellas);
+        if (estrellas < 1 || estrellas > 5) {
+            throw new ValidacionException("La calificación debe estar entre 1 y 5 estrellas.");
+        }
+
+        // Asegurar que el mapa esté inicializado
+        if (reporte.getCalificaciones() == null) {
+            reporte.setCalificaciones(new HashMap<>());
+        }
+
+        // Registrar o actualizar la calificación (el put actualiza la calificacion del cliente si ya esxite)
+        reporte.getCalificaciones().put(idUsuario, estrellas);
 
         double promedio = reporte.getCalificaciones()
+                .values()
                 .stream()
                 .mapToInt(Integer::intValue)
                 .average()
@@ -336,9 +388,21 @@ public class ReporteServicioImpl implements ReporteServicio {
         reporteRepo.save(reporte);
     }
 
+    @Override
+    public List<ReporteDTO> obtenerReportesPorUsuario() throws Exception{
 
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String idUsuario = user.getUsername();
 
+        List<Reporte> reportes = reporteRepo.findByUsuarioId(idUsuario);
 
+        if (reportes.isEmpty()) {
+            throw new RecursoNoEncontradoException("El usuario no tiene reportes registrados.");
+        }
 
+        return reportes.stream()
+                .map(reporteMapper::toDTO)
+                .collect(Collectors.toList());
+    }
 
 }

@@ -4,6 +4,7 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -12,6 +13,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Setter
 @NoArgsConstructor
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Document("categorias")
 public class Categoria {
 
