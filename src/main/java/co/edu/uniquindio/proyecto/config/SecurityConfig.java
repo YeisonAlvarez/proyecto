@@ -47,6 +47,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/recuperarPassword").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/cambiar-password").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/imagenes/**").permitAll()
+
 
 
 
@@ -93,6 +95,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/reportes/informe").hasAuthority("ROLE_ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/reportes/filtrar").hasAuthority("ROLE_ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/usuarios").hasAuthority("ROLE_ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/admin/**").hasAuthority("ROLE_ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/admin/**").hasAuthority("ROLE_ADMINISTRADOR")
+
+
+
+                        // Ruta administradores y clientes
+                        .requestMatchers(HttpMethod.PUT, "/api/reportes/{id}/cambiarEstado").hasAuthority("ROLE_ADMINISTRADOR")
+
 
                         // Ruta administradores y clientes
                         .requestMatchers(HttpMethod.PUT, "/api/reportes/{id}/cambiarEstado").hasAuthority("ROLE_ADMINISTRADOR")

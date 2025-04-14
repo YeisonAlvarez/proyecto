@@ -6,11 +6,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@Document("comentario")
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Document("comentario")
 public class Comentario {
 
     @Id
@@ -20,7 +21,8 @@ public class Comentario {
 
     private LocalDateTime fecha;
 
-    private String usuarioId;
+    private String usuarioId;  // Asegúrate de que estos campos existan
 
-    private String reporteId;
+    private String reporteId;  // Asegúrate de que estos campos existan
 }
+

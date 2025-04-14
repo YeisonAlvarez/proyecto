@@ -75,6 +75,8 @@ public class CategoriaServicioImpl implements CategoriaServicio {
     public List<CategoriaDTO> listarCategorias() throws Exception {
         List<Categoria> categorias = categoriaRepo.findAll();
 
+
+
         if (categorias.isEmpty()) {
             throw new RecursoNoEncontradoException("No hay categorías registradas.");
         }

@@ -14,10 +14,13 @@ public interface ComentarioMapper {
 
     Comentario crearDtoToComentario(CrearComentarioDTO dto);
 
-    @Mapping(target = "usuarioId", source = "idUsuario")
-    @Mapping(target = "reporteId", source = "idReporte")
-    void completarDatos(@MappingTarget Comentario comentario, String idUsuario, String idReporte);
+    // Usar un método default para asignar los valores manualmente
+    default void completarDatos(@MappingTarget Comentario comentario, String idUsuario, String idReporte) {
+        comentario.setUsuarioId(idUsuario);
+        comentario.setReporteId(idReporte);
+    }
 }
+
 
 
 

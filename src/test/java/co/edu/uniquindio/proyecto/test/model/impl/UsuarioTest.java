@@ -1,6 +1,9 @@
-package co.edu.uniquindio.proyecto.test;
+package co.edu.uniquindio.proyecto.test.model.impl;
 
 import co.edu.uniquindio.proyecto.modelo.documentos.Usuario;
+import co.edu.uniquindio.proyecto.modelo.enums.Ciudad;
+import co.edu.uniquindio.proyecto.modelo.enums.EstadoUsuario;
+import co.edu.uniquindio.proyecto.modelo.enums.Rol;
 import co.edu.uniquindio.proyecto.repositorios.UsuarioRepo;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
@@ -27,15 +30,15 @@ public class UsuarioTest {
     public void registrarTest() {
         //Creamos un cliente con sus propiedades
         Usuario usuario = Usuario.builder()
-                .nombre("Pepito")
-//                .ciudad(Ciudad.ARMENIA)
-                .direccion("calle 23 2 1")
-                .email("pepito@email.com")
-                .telefono("telefono1")
+                .nombre("Sergio Ramirez")
+                .ciudad(Ciudad.ARMENIA)
+                .direccion("calle 23 # 12 7")
+                .email("sergio@email.com")
+                .telefono("3212325439")
                 .password("123456")
                 .fechaRegistro(LocalDateTime.now())
-//                .rol(Rol.CLIENTE)
-//                .estado(EstadoUsuario.INACTIVO)
+                .rol(Rol.CLIENTE)
+                .estado(EstadoUsuario.INACTIVO)
                 .build();
 
         //Guardamos el cliente en la base de datos
@@ -48,12 +51,15 @@ public class UsuarioTest {
     @Test
     public void actualizarTest() {
         Usuario usuario = Usuario.builder()
-                .nombre("Pepito")
-                .direccion("calle 23 2 1")
-                .email("pepito@email.com")
-                .telefono("telefono1")
+                .nombre("Sergio Ramirez")
+                .ciudad(Ciudad.PEREIRA)
+                .direccion("calle 12 # 22 27")
+                .email("sergio@email.com")
+                .telefono("3212325439")
                 .password("123456")
                 .fechaRegistro(LocalDateTime.now())
+                .rol(Rol.CLIENTE)
+                .estado(EstadoUsuario.INACTIVO)
                 .build();
         Usuario clienteCreado = usuarioRepo.save(usuario);
         clienteCreado.setTelefono("2212123");
