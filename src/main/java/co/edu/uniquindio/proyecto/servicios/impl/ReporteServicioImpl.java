@@ -11,6 +11,7 @@ import co.edu.uniquindio.proyecto.repositorios.CategoriaRepo;
 import co.edu.uniquindio.proyecto.repositorios.ReporteRepo;
 import co.edu.uniquindio.proyecto.servicios.EmailServicio;
 import co.edu.uniquindio.proyecto.servicios.ReporteServicio;
+import co.edu.uniquindio.proyecto.servicios.UsuarioServicio;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;  // Para iText
@@ -43,6 +44,7 @@ public class ReporteServicioImpl implements ReporteServicio {
     private final WebSocketNotificationService webSocketNotificationService;
     private final EmailServicio emailServicio;
     private final CategoriaRepo categoriaRepo;
+    private  final UsuarioServicio usuarioServicio;
 
 
     @Override
@@ -75,11 +77,29 @@ public class ReporteServicioImpl implements ReporteServicio {
                 // .rutaImagenes(crearReporteDTO.rutaImagenes()) // Descomenta si manejas imágenes
                 .build();
 
-        webSocketNotificationService.notificarClientes( new NotificacionDTO(
-                "",
-                "",
-                "/topic/reports"
-        ) );
+        List<UsuarioNotificacionDTO> usuariosConEmailActivo = usuarioServicio.listarUsuariosConNotificacionEmailActiva();
+        List<UsuarioNotificacionDTO> usuariosConAppActivo = usuarioServicio.listarUsuariosConNotificacionAppActiva();
+
+        //Notificar via app todos los usuarios con notificacion via app activa
+        for (UsuarioNotificacionDTO usuario : usuariosConAppActivo) {
+
+            webSocketNotificationService.notificarClientes( new NotificacionDTO(
+                    "Nuevo reporte en tu zona",
+                    "Se ha reportado un nuevo incidente cerca de tu ubicación. Revisa los detalles para mantenerte informado.",
+                    "/topic/reports"
+            ) );
+        }
+
+        //Notificar via app todos los usuarios con notificacion via email activa
+        for (UsuarioNotificacionDTO usuario : usuariosConEmailActivo) {
+            EmailDTO email = new EmailDTO(
+                    usuario.email(),
+                    "Nuevo reporte en tu zona",
+                    "¡Hola! Se ha registrado un nuevo reporte cerca de tu ubicación. Ingresa a la plataforma para ver más detalles."
+            );
+
+                emailServicio.enviarCorreo(email);
+        }
 
         return reporteRepo.save(reporte);
     }
@@ -140,11 +160,13 @@ public class ReporteServicioImpl implements ReporteServicio {
 
     @Override
     public void eliminarReporte(String id) throws Exception {
-        if (!reporteRepo.existsById(id)) {
-            throw new RecursoNoEncontradoException("No se puede eliminar. Reporte con ID '" + id + "' no encontrado.");
-        }
-        reporteRepo.deleteById(id);
+        Reporte reporte = reporteRepo.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("No se puede eliminar. Reporte con ID '" + id + "' no encontrado."));
+
+        reporte.setEstado(EstadoReporte.ELIMINADO);
+        reporteRepo.save(reporte);
     }
+
 
 
     @Override
@@ -310,7 +332,8 @@ public class ReporteServicioImpl implements ReporteServicio {
             throw new ValidacionException("Debe especificar al menos un filtro para buscar reportes.");
         }
 
-        List<Reporte> reportes = reporteRepo.findAll().stream()
+        return reporteRepo.findAll().stream()
+                .filter(reporte -> reporte.getEstado() != EstadoReporte.ELIMINADO) // excluir eliminados
                 .filter(reporte -> {
                     boolean coincide = true;
 
@@ -339,17 +362,16 @@ public class ReporteServicioImpl implements ReporteServicio {
                     }
 
                     if (filtros.latitud() != null && filtros.longitud() != null) {
-                        // Puedes agregar lógica geográfica si deseas por distancia
-                        coincide = coincide && reporte.getUbicacion().getY() == filtros.latitud()
-                                && reporte.getUbicacion().getX() == filtros.longitud();
+                        coincide = coincide && reporte.getUbicacion().getY() == filtros.latitud() &&
+                                reporte.getUbicacion().getX() == filtros.longitud();
                     }
 
                     return coincide;
                 })
+                .map(reporteMapper::toDTO)
                 .toList();
-
-        return reportes.stream().map(reporteMapper::toDTO).toList();
     }
+
 
 
     @Override

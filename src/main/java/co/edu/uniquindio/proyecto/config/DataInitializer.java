@@ -1,6 +1,7 @@
 package co.edu.uniquindio.proyecto.config;
 
 import co.edu.uniquindio.proyecto.modelo.documentos.Usuario;
+import co.edu.uniquindio.proyecto.modelo.enums.Ciudad;
 import co.edu.uniquindio.proyecto.modelo.enums.EstadoUsuario;
 import co.edu.uniquindio.proyecto.modelo.enums.Rol;
 import co.edu.uniquindio.proyecto.repositorios.UsuarioRepo;
@@ -23,10 +24,14 @@ public class DataInitializer implements CommandLineRunner {
             Usuario admin = Usuario.builder()
                     .nombre("Administrador General")
                     .email("admin@reportes.com")
+                    .telefono("3212435665")
+                    .direccion("Oficina 10")
+                    .ciudad(Ciudad.ARMENIA) // si usas enum Ciudad
                     .password(passwordEncoder.encode("123456789"))
                     .rol(Rol.ADMINISTRADOR)
                     .estado(EstadoUsuario.ACTIVO)
                     .build();
+
 
             usuarioRepo.save(admin);
             System.out.println("Administrador creado exitosamente");

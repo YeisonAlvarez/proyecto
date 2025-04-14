@@ -314,4 +314,43 @@ public class UsuarioServicioImpl implements UsuarioServicio {
         usuarioRepo.save(usuario);
     }
 
+    @Override
+    public List<UsuarioNotificacionDTO> listarUsuariosConNotificacionEmailActiva() {
+        Query query = new Query();
+
+        // Solo usuarios CLIENTE con notificación por correo activa
+        query.addCriteria(Criteria.where("rol").is(Rol.CLIENTE.name()));
+        query.addCriteria(Criteria.where("notificacionEmail").is(true));
+
+        List<Usuario> usuarios = mongoTemplate.find(query, Usuario.class);
+
+        return usuarios.stream()
+                .map(usuario -> new UsuarioNotificacionDTO(
+                        usuario.getId(),
+                        usuario.getEmail(),
+                        usuario.isNotificacionApp(),
+                        usuario.isNotificacionEmail()
+                )).toList();
+    }
+
+    @Override
+    public List<UsuarioNotificacionDTO> listarUsuariosConNotificacionAppActiva() {
+        Query query = new Query();
+
+        // Solo usuarios CLIENTE con notificación por correo activa
+        query.addCriteria(Criteria.where("rol").is(Rol.CLIENTE.name()));
+        query.addCriteria(Criteria.where("notificacionApp").is(true));
+
+        List<Usuario> usuarios = mongoTemplate.find(query, Usuario.class);
+
+        return usuarios.stream()
+                .map(usuario -> new UsuarioNotificacionDTO(
+                        usuario.getId(),
+                        usuario.getEmail(),
+                        usuario.isNotificacionApp(),
+                        usuario.isNotificacionEmail()
+                )).toList();
+    }
+
+
 }

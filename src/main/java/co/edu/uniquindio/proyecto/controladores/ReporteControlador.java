@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -72,7 +73,7 @@ public class ReporteControlador {
 
 
 
-
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{id}")
     public ResponseEntity<MensajeDTO<String>> eliminarReporte(@PathVariable String id)   throws Exception{
         reporteServicio.eliminarReporte(id);
@@ -154,10 +155,30 @@ public class ReporteControlador {
 
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/buscar")
-    public ResponseEntity<MensajeDTO<List<ReporteDTO>>> buscarReportes(@Valid BuscarReporteDTO filtros) throws Exception {
+    public ResponseEntity<MensajeDTO<List<ReporteDTO>>> buscarReportes(
+            @RequestParam(required = false) String txtConsulta,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin,
+            @RequestParam(required = false) Double latitud,
+            @RequestParam(required = false) Double longitud
+    ) throws Exception {
+        BuscarReporteDTO filtros = new BuscarReporteDTO(
+                txtConsulta,
+                categoria,
+                estado,
+                fechaInicio,
+                fechaFin,
+                latitud,
+                longitud
+        );
+
         List<ReporteDTO> resultados = reporteServicio.buscarReportes(filtros);
         return ResponseEntity.ok(new MensajeDTO<>(false, "Lista de reportes filtrados obtenida correctamente", resultados));
     }
+
+
 
 
     @SecurityRequirement(name = "bearerAuth")

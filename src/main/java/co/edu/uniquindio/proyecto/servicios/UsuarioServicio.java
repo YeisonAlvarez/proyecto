@@ -29,4 +29,8 @@ public interface UsuarioServicio {
     void reenviarToken(String email) throws Exception;
 
     void actualizarSuscripcionNotificaciones(String idUsuario, SuscripcionNotificacionesDTO suscripcion) throws Exception;
+
+    List<UsuarioNotificacionDTO> listarUsuariosConNotificacionEmailActiva();
+
+    List<UsuarioNotificacionDTO> listarUsuariosConNotificacionAppActiva();
 }
